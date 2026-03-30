@@ -50,7 +50,7 @@ const PublicLayout = ({ children }) => {
 const FooterWrapper = () => {
   const [config, setConfig] = React.useState(null);
   React.useEffect(() => {
-    fetch('/api/config/public').then(r => r.json()).then(d => setConfig(d.config)).catch(() => {});
+    fetch(`${import.meta.env.VITE_API_URL || '/api'}/config/public`).then(r => r.json()).then(d => setConfig(d.config)).catch(() => {});
   }, []);
   return <Footer config={config} />;
 };
