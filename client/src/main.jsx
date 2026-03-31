@@ -26,6 +26,8 @@ import MyBookingsPage from './pages/MyBookingsPage';
 import BookingStatusPage from './pages/BookingStatusPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import InstructorsPage from './pages/InstructorsPage';
+import InstructorProfilePage from './pages/InstructorProfilePage';
 
 // Admin pages
 import AdminLayout from './pages/admin/AdminLayout';
@@ -36,6 +38,7 @@ import CategoriesPage from './pages/admin/CategoriesPage';
 import SlotsPage from './pages/admin/SlotsPage';
 import UsersPage from './pages/admin/UsersPage';
 import SiteConfigPage from './pages/admin/SiteConfigPage';
+import InstructorsAdminPage from './pages/admin/InstructorsAdminPage';
 
 const PublicLayout = ({ children }) => {
   return (
@@ -76,6 +79,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/booking-status" element={<PublicLayout><BookingStatusPage /></PublicLayout>} />
           <Route path="/forgot-password" element={<PublicLayout><ForgotPasswordPage /></PublicLayout>} />
           <Route path="/reset-password/:token" element={<PublicLayout><ResetPasswordPage /></PublicLayout>} />
+          <Route path="/instructors" element={<PublicLayout><InstructorsPage /></PublicLayout>} />
+          <Route path="/instructors/:id" element={<PublicLayout><InstructorProfilePage /></PublicLayout>} />
 
           {/* Admin routes */}
           <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminLayout /></ProtectedRoute>}>
@@ -86,6 +91,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="slots" element={<SlotsPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="config" element={<SiteConfigPage />} />
+            <Route path="instructors" element={<InstructorsAdminPage />} />
           </Route>
         </Routes>
       </AuthProvider>

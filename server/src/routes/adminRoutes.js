@@ -8,6 +8,7 @@ const { createCategory, updateCategory, deleteCategory } = require('../controlle
 const { createSlot, updateSlot, deleteSlot } = require('../controllers/slotController');
 const { getAllBookings, cancelBooking, updateMeetLink } = require('../controllers/bookingController');
 const { getAdminPayments, verifyPayment, rejectPayment } = require('../controllers/paymentController');
+const { getAdminInstructors, createInstructor, updateInstructor, deleteInstructor } = require('../controllers/instructorController');
 
 router.use(protect, authorize('admin'));
 
@@ -42,5 +43,11 @@ router.put('/payments/:id/reject', rejectPayment);
 router.get('/users', getUsers);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
+
+// Instructors
+router.get('/instructors', getAdminInstructors);
+router.post('/instructors', createInstructor);
+router.put('/instructors/:id', updateInstructor);
+router.delete('/instructors/:id', deleteInstructor);
 
 module.exports = router;

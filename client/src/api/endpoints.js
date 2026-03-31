@@ -60,3 +60,13 @@ export const adminAPI = {
   getUsers: (params) => api.get('/admin/users', { params }),
   updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
 };
+
+// Instructors
+export const instructorAPI = {
+  getAll: () => api.get('/instructors'),
+  getOne: (id) => api.get(`/instructors/${id}`),
+  getAdminAll: () => api.get('/admin/instructors'),
+  create: (data) => api.post('/admin/instructors', data),
+  update: (id, data) => api.put(`/admin/instructors/${id}`, data),
+  delete: (id) => api.delete(`/admin/instructors/${id}`),
+};
