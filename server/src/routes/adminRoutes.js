@@ -9,6 +9,8 @@ const { createSlot, updateSlot, deleteSlot } = require('../controllers/slotContr
 const { getAllBookings, cancelBooking, updateMeetLink } = require('../controllers/bookingController');
 const { getAdminPayments, verifyPayment, rejectPayment } = require('../controllers/paymentController');
 const { getAdminInstructors, createInstructor, updateInstructor, deleteInstructor } = require('../controllers/instructorController');
+const { getAdminResources, createResource, uploadResource, updateResource, deleteResource } = require('../controllers/resourceController');
+const s3Upload = require('../config/s3Upload');
 
 router.use(protect, authorize('admin'));
 
@@ -49,5 +51,12 @@ router.get('/instructors', getAdminInstructors);
 router.post('/instructors', createInstructor);
 router.put('/instructors/:id', updateInstructor);
 router.delete('/instructors/:id', deleteInstructor);
+
+// Resources
+router.get('/resources/:slotId', getAdminResources);
+router.post('/resources', createResource);
+router.put('/resources/:id', updateResource);
+router.delete('/resources/:id', deleteResource);
+router.post('/resources/upload', s3Upload.single('file'), uploadResource);
 
 module.exports = router;

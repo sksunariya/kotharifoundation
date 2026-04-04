@@ -10,6 +10,7 @@ const navItems = [
   { to: '/admin/categories', label: 'Categories', icon: '🏷️' },
   { to: '/admin/slots', label: 'Sessions', icon: '🗓️' },
   { to: '/admin/instructors', label: 'Instructors', icon: '👨‍🏫' },
+  { to: '/admin/resources', label: 'Resources', icon: '📦' },
   { to: '/admin/users', label: 'Users', icon: '👥' },
   { to: '/admin/config', label: 'Site Config', icon: '⚙️' },
 ];

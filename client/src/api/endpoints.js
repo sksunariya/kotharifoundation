@@ -61,6 +61,19 @@ export const adminAPI = {
   updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
 };
 
+// Resources
+export const resourceAPI = {
+  getForSlot: (slotId) => api.get(`/resources/${slotId}`),
+  getAdminForSlot: (slotId) => api.get(`/admin/resources/${slotId}`),
+  create: (data) => api.post('/admin/resources', data),
+  update: (id, data) => api.put(`/admin/resources/${id}`, data),
+  delete: (id) => api.delete(`/admin/resources/${id}`),
+  uploadFile: (formData, onProgress) => api.post('/admin/resources/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: onProgress ? (e) => onProgress(Math.round((e.loaded / e.total) * 100)) : undefined,
+  }),
+};
+
 // Instructors
 export const instructorAPI = {
   getAll: () => api.get('/instructors'),

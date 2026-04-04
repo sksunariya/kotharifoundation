@@ -3,6 +3,7 @@ import { bookingAPI } from '../../api/endpoints';
 import { formatDateTime, formatINR } from '../../utils/formatDate';
 import BookingStatusBadge from '../../components/BookingStatusBadge';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import ResourceModal from '../../components/ResourceModal';
 import useFetch from '../../hooks/useFetch';
 import toast from 'react-hot-toast';
 
@@ -61,6 +62,7 @@ const BookingsAdminPage = () => {
   const [status, setStatus] = useState('');
   const { data, loading, refetch } = useFetch(() => bookingAPI.getAll({ status }), [status]);
   const [meetLinkBooking, setMeetLinkBooking] = useState(null);
+  const [resourceSlot, setResourceSlot] = useState(null);
 
   const bookings = data?.bookings || [];
 
@@ -87,6 +89,9 @@ const BookingsAdminPage = () => {
           onClose={() => setMeetLinkBooking(null)}
           onSuccess={refetch}
         />
+      )}
+      {resourceSlot && (
+        <ResourceModal slot={resourceSlot} onClose={() => setResourceSlot(null)} />
       )}
 
       <div className="flex gap-2 mb-6 flex-wrap">
@@ -151,9 +156,17 @@ const BookingsAdminPage = () => {
                       ) : '—'}
                     </td>
                     <td className="py-3 px-4">
-                      {!['cancelled', 'completed'].includes(b.status) && (
-                        <button onClick={() => handleCancel(b._id)} className="btn-danger text-xs py-1.5 px-3">Cancel</button>
-                      )}
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => setResourceSlot(b.slotId)}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                        >
+                          📦 Resources
+                        </button>
+                        {!['cancelled', 'completed'].includes(b.status) && (
+                          <button onClick={() => handleCancel(b._id)} className="btn-danger text-xs py-1.5 px-3">Cancel</button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -179,7 +192,13 @@ const BookingsAdminPage = () => {
                   <p className="font-medium">{b.slotId?.title}</p>
                   <p className="text-xs text-gray-400">{formatDateTime(b.slotId?.startTime)} · {formatINR(b.slotId?.price)}</p>
                 </div>
-                <div className="flex items-center gap-3 pt-1">
+                <div className="flex items-center gap-2 pt-1 flex-wrap">
+                  <button
+                    onClick={() => setResourceSlot(b.slotId)}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                  >
+                    📦 Resources
+                  </button>
                   {b.meetLink ? (
                     <div className="flex items-center gap-1">
                       <a href={b.meetLink} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline text-xs">Meet Link ↗</a>

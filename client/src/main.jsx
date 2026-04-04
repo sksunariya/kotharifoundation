@@ -39,6 +39,8 @@ import SlotsPage from './pages/admin/SlotsPage';
 import UsersPage from './pages/admin/UsersPage';
 import SiteConfigPage from './pages/admin/SiteConfigPage';
 import InstructorsAdminPage from './pages/admin/InstructorsAdminPage';
+import ResourcesAdminPage from './pages/admin/ResourcesAdminPage';
+import ResourceHubPage from './pages/ResourceHubPage';
 
 const PublicLayout = ({ children }) => {
   return (
@@ -81,6 +83,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/reset-password/:token" element={<PublicLayout><ResetPasswordPage /></PublicLayout>} />
           <Route path="/instructors" element={<PublicLayout><InstructorsPage /></PublicLayout>} />
           <Route path="/instructors/:id" element={<PublicLayout><InstructorProfilePage /></PublicLayout>} />
+          <Route path="/resources/:slotId" element={<PublicLayout>
+            <ProtectedRoute><ResourceHubPage /></ProtectedRoute>
+          </PublicLayout>} />
 
           {/* Admin routes */}
           <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminLayout /></ProtectedRoute>}>
@@ -92,6 +97,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="users" element={<UsersPage />} />
             <Route path="config" element={<SiteConfigPage />} />
             <Route path="instructors" element={<InstructorsAdminPage />} />
+            <Route path="resources" element={<ResourcesAdminPage />} />
           </Route>
         </Routes>
       </AuthProvider>

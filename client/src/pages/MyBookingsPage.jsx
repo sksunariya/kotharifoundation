@@ -123,6 +123,14 @@ const MyBookingsPage = () => {
                   )}
                 </div>
               )}
+              {booking.status === 'confirmed' && (
+                <Link
+                  to={`/resources/${booking.slotId?._id}`}
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 px-4 py-2 rounded-lg transition-colors mb-3"
+                >
+                  📦 Access Session Resources
+                </Link>
+              )}
 
               {booking.status === 'rejected' && booking.rejectionReason && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">

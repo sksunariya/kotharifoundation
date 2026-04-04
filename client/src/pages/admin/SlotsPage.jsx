@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { slotAPI, categoryAPI } from '../../api/endpoints';
 import { formatDateTime, formatINR } from '../../utils/formatDate';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import ResourceModal from '../../components/ResourceModal';
 import useFetch from '../../hooks/useFetch';
 import toast from 'react-hot-toast';
 
@@ -21,6 +22,7 @@ const SlotsPage = () => {
   const [form, setForm] = useState(defaultForm);
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [resourceSlot, setResourceSlot] = useState(null);
 
   const toInputDatetime = (d) => d ? new Date(d).toISOString().slice(0, 16) : '';
 
@@ -126,6 +128,10 @@ const SlotsPage = () => {
         </div>
       )}
 
+      {resourceSlot && (
+        <ResourceModal slot={resourceSlot} onClose={() => setResourceSlot(null)} />
+      )}
+
       {slotsLoading ? <LoadingSpinner /> : (
         <>
           {/* Table — md and up */}
@@ -157,9 +163,12 @@ const SlotsPage = () => {
                         {slot.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="py-3 px-4 flex gap-2">
-                      <button onClick={() => openEdit(slot)} className="btn-secondary text-xs py-1.5 px-3">Edit</button>
-                      <button onClick={() => handleDelete(slot._id)} className="btn-danger text-xs py-1.5 px-3">Delete</button>
+                    <td className="py-3 px-4">
+                      <div className="flex gap-2 flex-wrap">
+                        <button onClick={() => setResourceSlot(slot)} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors">📦 Resources</button>
+                        <button onClick={() => openEdit(slot)} className="btn-secondary text-xs py-1.5 px-3">Edit</button>
+                        <button onClick={() => handleDelete(slot._id)} className="btn-danger text-xs py-1.5 px-3">Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -185,9 +194,10 @@ const SlotsPage = () => {
                 <div className="text-sm text-gray-500 flex gap-4">
                   <span>📅 {formatDateTime(slot.startTime)}</span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <span className="font-semibold text-sm">{formatINR(slot.price)} · {slot.bookedCount}/{slot.capacity} booked</span>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
+                    <button onClick={() => setResourceSlot(slot)} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors">📦 Resources</button>
                     <button onClick={() => openEdit(slot)} className="btn-secondary text-xs py-1.5 px-3">Edit</button>
                     <button onClick={() => handleDelete(slot._id)} className="btn-danger text-xs py-1.5 px-3">Delete</button>
                   </div>
