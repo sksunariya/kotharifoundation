@@ -61,12 +61,11 @@ const FooterWrapper = () => {
 };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <ScrollToTop />
-        <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
-        <Routes>
+  <BrowserRouter>
+    <AuthProvider>
+      <ScrollToTop />
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      <Routes>
           {/* Public routes with navbar + footer */}
           <Route path="/" element={<PublicLayout><LandingPage /></PublicLayout>} />
           <Route path="/login" element={<PublicLayout><LoginPage /></PublicLayout>} />
@@ -102,5 +101,4 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </Routes>
       </AuthProvider>
     </BrowserRouter>
-  </React.StrictMode>
 );

@@ -56,11 +56,29 @@ const VerifyModal = ({ payment, onClose, onSuccess }) => {
       <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl">
         <h3 className="font-bold text-lg text-gray-800 mb-4">Review Payment</h3>
 
+        {payment.isDuplicateUtr && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">
+            <span className="text-base flex-shrink-0">⚠️</span>
+            <div>
+              <p className="font-semibold">Duplicate UTR detected</p>
+              <p className="text-xs mt-0.5 text-red-600">
+                UTR <span className="font-mono">{payment.utrNumber}</span> has already been accepted for another booking. Approving this payment is not recommended.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="bg-gray-50 rounded-lg p-4 mb-4 text-sm space-y-2">
           <div><span className="text-gray-500">Student:</span> <strong>{student?.name}</strong> ({student?.email})</div>
           <div><span className="text-gray-500">Session:</span> <strong>{slot?.title}</strong></div>
           <div><span className="text-gray-500">Amount:</span> <strong>{formatINR(payment.amount)}</strong></div>
-          <div><span className="text-gray-500">UTR:</span> <span className="font-mono">{payment.utrNumber}</span></div>
+          <div>
+            <span className="text-gray-500">UTR:</span>{' '}
+            <span className="font-mono">{payment.utrNumber}</span>
+            {payment.isDuplicateUtr && (
+              <span className="ml-2 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-semibold">Duplicate</span>
+            )}
+          </div>
           <div><span className="text-gray-500">Submitted:</span> {payment.submittedAt ? formatTimeAgo(payment.submittedAt) : '—'}</div>
           {payment.screenshotUrl && (
             <div>
@@ -161,7 +179,12 @@ const PaymentsPage = () => {
                       <div className="text-gray-400 text-xs">{formatDateTime(p.bookingId?.slotId?.startTime)}</div>
                     </td>
                     <td className="py-3 px-4 font-semibold">{formatINR(p.amount)}</td>
-                    <td className="py-3 px-4 font-mono text-xs">{p.utrNumber || '—'}</td>
+                    <td className="py-3 px-4 font-mono text-xs">
+                      {p.utrNumber || '—'}
+                      {p.isDuplicateUtr && (
+                        <span className="ml-1.5 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-semibold non-mono" title="This UTR was already accepted for another booking">⚠️ Dup</span>
+                      )}
+                    </td>
                     <td className="py-3 px-4">
                       <span className={`badge ${PAYMENT_STATUS_LABELS[p.status]?.color}`}>
                         {PAYMENT_STATUS_LABELS[p.status]?.label}
@@ -207,7 +230,12 @@ const PaymentsPage = () => {
                 <div className="flex items-center justify-between text-sm">
                   <div>
                     <span className="font-semibold">{formatINR(p.amount)}</span>
-                    {p.utrNumber && <span className="text-gray-400 font-mono text-xs ml-2">UTR: {p.utrNumber}</span>}
+                    {p.utrNumber && (
+                      <span className="text-gray-400 font-mono text-xs ml-2">
+                        UTR: {p.utrNumber}
+                        {p.isDuplicateUtr && <span className="ml-1 text-red-500 font-semibold not-italic">⚠️</span>}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {p.screenshotUrl && (

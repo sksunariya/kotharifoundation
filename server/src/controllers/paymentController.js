@@ -22,6 +22,19 @@ const submitPayment = catchAsync(async (req, res) => {
   const payment = await Payment.findOne({ bookingId });
   if (!payment) throw new ApiError(404, 'Payment record not found.');
 
+  // Block duplicate UTR submissions
+  if (utrNumber) {
+    const duplicate = await Payment.findOne({
+      utrNumber: utrNumber.trim(),
+      _id: { $ne: payment._id },
+      status: { $in: ['submitted', 'under_review', 'verified'] },
+      isDeleted: false,
+    });
+    if (duplicate) {
+      throw new ApiError(400, 'This UTR number has already been submitted for another booking. Please check your payment details or contact support.');
+    }
+  }
+
   payment.utrNumber = utrNumber;
   payment.screenshotUrl = req.file?.path || req.body.screenshotUrl;
   payment.status = 'submitted';
@@ -48,6 +61,20 @@ const resubmitPayment = catchAsync(async (req, res) => {
   if (payment.status !== 'rejected') throw new ApiError(400, 'Only rejected payments can be resubmitted.');
 
   const { utrNumber } = req.body;
+
+  // Block duplicate UTR on resubmission
+  if (utrNumber) {
+    const duplicate = await Payment.findOne({
+      utrNumber: utrNumber.trim(),
+      _id: { $ne: payment._id },
+      status: { $in: ['submitted', 'under_review', 'verified'] },
+      isDeleted: false,
+    });
+    if (duplicate) {
+      throw new ApiError(400, 'This UTR number has already been submitted for another booking. Please use the correct UTR from your payment screenshot.');
+    }
+  }
+
   payment.utrNumber = utrNumber;
   payment.screenshotUrl = req.file?.path || req.body.screenshotUrl;
   payment.status = 'submitted';
@@ -80,7 +107,20 @@ const getAdminPayments = catchAsync(async (req, res) => {
     .skip((page - 1) * limit)
     .limit(parseInt(limit));
 
-  res.json({ success: true, payments, pagination: { total, page: parseInt(page), limit: parseInt(limit), pages: Math.ceil(total / limit) } });
+  // Flag payments whose UTR is already verified in another payment
+  const utrs = payments.map(p => p.utrNumber).filter(Boolean);
+  const verifiedUtrs = utrs.length
+    ? await Payment.find({ utrNumber: { $in: utrs }, status: 'verified', isDeleted: false }).distinct('utrNumber')
+    : [];
+  const verifiedUtrSet = new Set(verifiedUtrs);
+
+  const enriched = payments.map(p => {
+    const obj = p.toObject();
+    obj.isDuplicateUtr = !!(p.utrNumber && verifiedUtrSet.has(p.utrNumber) && p.status !== 'verified');
+    return obj;
+  });
+
+  res.json({ success: true, payments: enriched, pagination: { total, page: parseInt(page), limit: parseInt(limit), pages: Math.ceil(total / limit) } });
 });
 
 // PUT /api/admin/payments/:id/verify — admin approves payment
@@ -95,6 +135,25 @@ const verifyPayment = catchAsync(async (req, res) => {
 
   if (!payment) throw new ApiError(404, 'Payment not found.');
   if (payment.status === 'verified') throw new ApiError(400, 'Payment already verified.');
+
+  // Block if UTR was already accepted for a different payment
+  if (payment.utrNumber) {
+    const alreadyVerified = await Payment.findOne({
+      utrNumber: payment.utrNumber,
+      _id: { $ne: payment._id },
+      status: 'verified',
+      isDeleted: false,
+    }).populate({ path: 'bookingId', populate: { path: 'studentId', select: 'name email' } });
+
+    if (alreadyVerified) {
+      const other = alreadyVerified.bookingId?.studentId;
+      throw new ApiError(400,
+        `UTR ${payment.utrNumber} has already been accepted for another booking` +
+        (other ? ` (${other.name} — ${other.email})` : '') +
+        '. This may be a fraudulent submission. Please reject this payment.'
+      );
+    }
+  }
 
   payment.status = 'verified';
   payment.verifiedBy = req.user._id;

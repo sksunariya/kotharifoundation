@@ -35,6 +35,7 @@ app.use(
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400, // cache preflight for 24 hours — eliminates repeated OPTIONS requests
   })
 );
 

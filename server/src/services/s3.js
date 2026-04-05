@@ -2,7 +2,7 @@ const { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } = re
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 const s3 = new S3Client({
-  region: process.env.AWS_REGION || 'ap-south-1',
+  region: process.env.AWS_REGION || 'ap-south-2',
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,

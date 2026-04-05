@@ -39,16 +39,20 @@ const SessionsPage = () => {
   const selectedCategory = searchParams.get('category') || '';
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     Promise.all([
       slotAPI.getAll({ upcoming: 'true', ...(selectedCategory && { category: selectedCategory }) }),
       categoryAPI.getAll(),
     ])
       .then(([slotsRes, catsRes]) => {
+        if (cancelled) return;
         setSlots(slotsRes.data.slots);
         setCategories(catsRes.data.categories);
       })
       .catch(console.error)
-      .finally(() => setLoading(false));
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [selectedCategory]);
 
   return (

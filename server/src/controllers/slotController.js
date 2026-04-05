@@ -5,11 +5,10 @@ const ApiError = require('../utils/ApiError');
 // GET /api/slots
 const getSlots = catchAsync(async (req, res) => {
   const { category, upcoming } = req.query;
-  const filter = {};
+  const filter = { isDeleted: false }; // both admin and users never see deleted slots
 
   if (req.user?.role !== 'admin') {
-    filter.isActive = true;
-    filter.isDeleted = false;  // users never see deleted slots
+    filter.isActive = true; // users only see active slots
   }
 
   if (category) filter.categoryId = category;

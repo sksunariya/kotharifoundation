@@ -5,8 +5,8 @@ const ApiError = require('../utils/ApiError');
 // GET /api/categories
 const getCategories = catchAsync(async (req, res) => {
   const filter = req.user?.role === 'admin'
-    ? {}                                      // admin sees all, including deleted
-    : { isActive: true, isDeleted: false };   // users never see deleted
+    ? { isDeleted: false }                    // admin sees active + inactive, not deleted
+    : { isActive: true, isDeleted: false };   // users see active only
   const categories = await Category.find(filter).sort({ sortOrder: 1, name: 1 });
   res.json({ success: true, categories });
 });

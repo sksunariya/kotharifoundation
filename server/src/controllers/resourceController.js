@@ -7,10 +7,22 @@ const { getPresignedUrl, putObject } = require('../services/s3');
 
 // ── S3 key naming ─────────────────────────────────────────────────────────────
 // e.g. sessions/abc123/2025-04-05_14-30_dsa_crash_course_recording.mp4
+// Extract YYYY-MM-DD and HH-MM in IST regardless of server timezone
+const toISTParts = (d) => {
+  const parts = {};
+  new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(d).forEach(({ type, value }) => { parts[type] = value; });
+  return parts;
+};
+
 const makeS3Key = (slot, type, index, mimeType) => {
   const d = new Date(slot.startTime);
-  const date = d.toISOString().slice(0, 10);
-  const time = d.toTimeString().slice(0, 5).replace(':', '-');
+  const p = toISTParts(d);
+  const date = `${p.year}-${p.month}-${p.day}`;
+  const time = `${p.hour}-${p.minute}`;
   const name = slot.title.replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase().slice(0, 30);
   const suffix = type === 'video'
     ? (index === 0 ? 'recording' : `video_${index + 1}`)
