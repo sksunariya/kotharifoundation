@@ -6,7 +6,8 @@ const paymentSchema = new mongoose.Schema(
     bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', required: true, unique: true },
     amount: { type: Number, required: true },
     utrNumber: { type: String, trim: true },
-    screenshotUrl: { type: String },
+    screenshotUrl: { type: String },  // legacy – kept for old Cloudinary records
+    screenshotKey: { type: String },  // S3 object key for new uploads
     status: {
       type: String,
       enum: Object.values(PAYMENT_STATUS),

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { submitPayment, resubmitPayment } = require('../controllers/paymentController');
 const { protect } = require('../middleware/auth');
-const { upload } = require('../config/cloudinary');
+const { upload } = require('../config/imageUpload');
 
 router.use(protect);
 router.post('/', upload.single('screenshot'), submitPayment);

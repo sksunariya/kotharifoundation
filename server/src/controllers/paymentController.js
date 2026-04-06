@@ -5,6 +5,19 @@ const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
 const { createMeetLink } = require('../services/google-meet');
 const { sendBookingConfirmation, sendPaymentRejection } = require('../services/email');
+const { putObject, getImagePresignedUrl } = require('../services/s3');
+
+// Attach a presigned screenshotUrl to a plain payment object (if it has a screenshotKey)
+const withScreenshotUrl = async (paymentObj) => {
+  if (paymentObj.screenshotKey) {
+    try {
+      paymentObj.screenshotUrl = await getImagePresignedUrl(paymentObj.screenshotKey);
+    } catch {
+      paymentObj.screenshotUrl = null;
+    }
+  }
+  return paymentObj;
+};
 
 // POST /api/payments — student submits UTR + screenshot
 const submitPayment = catchAsync(async (req, res) => {
@@ -35,8 +48,15 @@ const submitPayment = catchAsync(async (req, res) => {
     }
   }
 
+  if (req.file) {
+    const ext = req.file.mimetype.split('/')[1] || 'jpg';
+    const screenshotKey = `payments/${bookingId}/${Date.now()}_screenshot.${ext}`;
+    await putObject(screenshotKey, req.file.buffer, req.file.mimetype);
+    payment.screenshotKey = screenshotKey;
+    payment.screenshotUrl = undefined;
+  }
+
   payment.utrNumber = utrNumber;
-  payment.screenshotUrl = req.file?.path || req.body.screenshotUrl;
   payment.status = 'submitted';
   payment.submittedAt = new Date();
   await payment.save();
@@ -75,8 +95,15 @@ const resubmitPayment = catchAsync(async (req, res) => {
     }
   }
 
+  if (req.file) {
+    const ext = req.file.mimetype.split('/')[1] || 'jpg';
+    const screenshotKey = `payments/${payment.bookingId._id}/${Date.now()}_screenshot.${ext}`;
+    await putObject(screenshotKey, req.file.buffer, req.file.mimetype);
+    payment.screenshotKey = screenshotKey;
+    payment.screenshotUrl = undefined;
+  }
+
   payment.utrNumber = utrNumber;
-  payment.screenshotUrl = req.file?.path || req.body.screenshotUrl;
   payment.status = 'submitted';
   payment.submittedAt = new Date();
   payment.adminNotes = undefined;
@@ -114,11 +141,11 @@ const getAdminPayments = catchAsync(async (req, res) => {
     : [];
   const verifiedUtrSet = new Set(verifiedUtrs);
 
-  const enriched = payments.map(p => {
+  const enriched = await Promise.all(payments.map(async (p) => {
     const obj = p.toObject();
     obj.isDuplicateUtr = !!(p.utrNumber && verifiedUtrSet.has(p.utrNumber) && p.status !== 'verified');
-    return obj;
-  });
+    return withScreenshotUrl(obj);
+  }));
 
   res.json({ success: true, payments: enriched, pagination: { total, page: parseInt(page), limit: parseInt(limit), pages: Math.ceil(total / limit) } });
 });
@@ -213,7 +240,8 @@ const verifyPayment = catchAsync(async (req, res) => {
     warnings.push('email_failed');
   }
 
-  res.json({ success: true, payment, booking, warnings });
+  const paymentObj = await withScreenshotUrl(payment.toObject());
+  res.json({ success: true, payment: paymentObj, booking, warnings });
 });
 
 // PUT /api/admin/payments/:id/reject — admin rejects payment
@@ -254,7 +282,8 @@ const rejectPayment = catchAsync(async (req, res) => {
     warnings.push('email_failed');
   }
 
-  res.json({ success: true, payment, booking, warnings });
+  const paymentObj = await withScreenshotUrl(payment.toObject());
+  res.json({ success: true, payment: paymentObj, booking, warnings });
 });
 
 module.exports = { submitPayment, resubmitPayment, getAdminPayments, verifyPayment, rejectPayment };

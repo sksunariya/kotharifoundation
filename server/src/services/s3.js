@@ -60,4 +60,18 @@ const deleteS3Object = async (s3Key, bucket = DEFAULT_BUCKET) => {
   return s3.send(command);
 };
 
-module.exports = { getPresignedUrl, putObject, deleteS3Object };
+/**
+ * Generate a presigned GET URL for a payment screenshot (inline, 1-hour expiry).
+ * @param {string} s3Key
+ * @param {string} [bucket]
+ */
+const getImagePresignedUrl = async (s3Key, bucket = DEFAULT_BUCKET) => {
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: s3Key,
+    ResponseContentDisposition: 'inline',
+  });
+  return getSignedUrl(s3, command, { expiresIn: 3600 });
+};
+
+module.exports = { getPresignedUrl, getImagePresignedUrl, putObject, deleteS3Object };
