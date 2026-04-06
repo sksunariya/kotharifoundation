@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { resourceAPI } from '../api/endpoints';
 import toast from 'react-hot-toast';
 
@@ -7,7 +7,6 @@ import toast from 'react-hot-toast';
 
 const DropZone = ({ accept, label, icon, onFiles }) => {
   const [over, setOver] = useState(false);
-  const inputRef = useRef();
 
   const handle = (files) => {
     const valid = Array.from(files).filter(
@@ -22,8 +21,7 @@ const DropZone = ({ accept, label, icon, onFiles }) => {
       onDragOver={(e) => { e.preventDefault(); setOver(true); }}
       onDragLeave={() => setOver(false)}
       onDrop={(e) => { e.preventDefault(); setOver(false); handle(e.dataTransfer.files); }}
-      onClick={() => inputRef.current.click()}
-      className={`border-2 border-dashed rounded-xl px-4 py-5 text-center cursor-pointer transition-colors select-none
+      className={`relative border-2 border-dashed rounded-xl px-4 py-5 text-center cursor-pointer transition-colors select-none
         ${over ? 'border-primary-400 bg-primary-50' : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'}`}
     >
       <div className="text-3xl mb-1">{icon}</div>
@@ -32,12 +30,11 @@ const DropZone = ({ accept, label, icon, onFiles }) => {
       </p>
       <p className="text-xs text-gray-400 mt-0.5">or <span className="text-primary-600 font-medium">browse files</span></p>
       <input
-        ref={inputRef}
         type="file"
-        className="hidden"
-        accept={accept === 'video' ? 'video/*' : 'application/pdf'}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        accept={accept === 'video' ? 'video/*' : 'application/pdf,.pdf'}
         multiple
-        onChange={(e) => handle(e.target.files)}
+        onChange={(e) => { handle(e.target.files); e.target.value = ''; }}
       />
     </div>
   );
