@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { resourceAPI } from '../api/endpoints';
 import toast from 'react-hot-toast';
 
+const uid = () => (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36));
+
 
 // ─── DropZone ────────────────────────────────────────────────────────────────
 
@@ -178,7 +180,7 @@ const ResourceModal = ({ slot, onClose }) => {
       const title = type === 'video'
         ? (index === 0 && savedVideos.length === 0 ? 'Session Recording' : `Supplementary Video ${index + 1}`)
         : `Notes / PDF ${index + 1}`;
-      return { _tempId: crypto.randomUUID(), file, type, title, progress: 0, status: 'uploading' };
+      return { _tempId: uid(), file, type, title, progress: 0, status: 'uploading' };
     });
 
     setUploading(prev => [...prev, ...entries]);
@@ -263,7 +265,7 @@ const ResourceModal = ({ slot, onClose }) => {
 
   // ── Add a blank link row ──
   const addLinkRow = () =>
-    setPendingLinks(prev => [...prev, { _tempId: crypto.randomUUID(), title: '', url: '' }]);
+    setPendingLinks(prev => [...prev, { _tempId: uid(), title: '', url: '' }]);
 
   const updateLinkRow = (id, field, val) =>
     setPendingLinks(prev => prev.map(l => l._tempId === id ? { ...l, [field]: val } : l));
