@@ -3,9 +3,12 @@ import { bookingAPI } from '../../api/endpoints';
 import { formatDateTime, formatINR } from '../../utils/formatDate';
 import BookingStatusBadge from '../../components/BookingStatusBadge';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Pagination from '../../components/Pagination';
 import ResourceModal from '../../components/ResourceModal';
 import useFetch from '../../hooks/useFetch';
 import toast from 'react-hot-toast';
+
+const LIMIT = 20;
 
 const MeetLinkModal = ({ booking, onClose, onSuccess }) => {
   const [meetLink, setMeetLink] = useState(booking.meetLink || '');
@@ -60,11 +63,13 @@ const MeetLinkModal = ({ booking, onClose, onSuccess }) => {
 
 const BookingsAdminPage = () => {
   const [status, setStatus] = useState('');
-  const { data, loading, refetch } = useFetch(() => bookingAPI.getAll({ status }), [status]);
+  const [page, setPage] = useState(1);
+  const { data, loading, refetch } = useFetch(() => bookingAPI.getAll({ status, page, limit: LIMIT }), [status, page]);
   const [meetLinkBooking, setMeetLinkBooking] = useState(null);
   const [resourceSlot, setResourceSlot] = useState(null);
 
   const bookings = data?.bookings || [];
+  const pagination = data?.pagination || {};
 
   const handleCancel = async (id) => {
     if (!confirm('Cancel this booking?')) return;
@@ -91,14 +96,14 @@ const BookingsAdminPage = () => {
         />
       )}
       {resourceSlot && (
-        <ResourceModal slot={resourceSlot} onClose={() => setResourceSlot(null)} />
+        <ResourceModal slot={resourceSlot} isAdmin={true} onClose={() => setResourceSlot(null)} />
       )}
 
       <div className="flex gap-2 mb-6 flex-wrap">
         {statusOptions.map((s) => (
           <button
             key={s || 'all'}
-            onClick={() => setStatus(s)}
+            onClick={() => { setStatus(s); setPage(1); }}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${status === s ? 'bg-primary-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-primary-300'}`}
           >
             {s || 'All'}
@@ -172,6 +177,15 @@ const BookingsAdminPage = () => {
                 ))}
               </tbody>
             </table>
+            <div className="px-4 pb-2">
+              <Pagination
+                page={pagination.page || page}
+                totalPages={pagination.pages || 1}
+                total={pagination.total || bookings.length}
+                limit={LIMIT}
+                onPage={(p) => setPage(p)}
+              />
+            </div>
           </div>
 
           {/* Cards — mobile */}
@@ -217,6 +231,13 @@ const BookingsAdminPage = () => {
                 </div>
               </div>
             ))}
+            <Pagination
+              page={pagination.page || page}
+              totalPages={pagination.pages || 1}
+              total={pagination.total || bookings.length}
+              limit={LIMIT}
+              onPage={(p) => setPage(p)}
+            />
           </div>
         </>
       )}

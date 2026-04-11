@@ -40,7 +40,11 @@ import UsersPage from './pages/admin/UsersPage';
 import SiteConfigPage from './pages/admin/SiteConfigPage';
 import InstructorsAdminPage from './pages/admin/InstructorsAdminPage';
 import ResourcesAdminPage from './pages/admin/ResourcesAdminPage';
+import ReviewsPage from './pages/admin/ReviewsPage';
+import QueriesPage from './pages/admin/QueriesPage';
 import ResourceHubPage from './pages/ResourceHubPage';
+import ContactPage from './pages/ContactPage';
+import ResubmitPaymentPage from './pages/ResubmitPaymentPage';
 
 const PublicLayout = ({ children }) => {
   return (
@@ -82,6 +86,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/reset-password/:token" element={<PublicLayout><ResetPasswordPage /></PublicLayout>} />
           <Route path="/instructors" element={<PublicLayout><InstructorsPage /></PublicLayout>} />
           <Route path="/instructors/:id" element={<PublicLayout><InstructorProfilePage /></PublicLayout>} />
+          <Route path="/contact" element={<PublicLayout><ContactPage /></PublicLayout>} />
+          <Route path="/resubmit-payment/:bookingId" element={<PublicLayout>
+            <ProtectedRoute><ResubmitPaymentPage /></ProtectedRoute>
+          </PublicLayout>} />
           <Route path="/resources/:slotId" element={<PublicLayout>
             <ProtectedRoute><ResourceHubPage /></ProtectedRoute>
           </PublicLayout>} />
@@ -97,6 +105,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="config" element={<SiteConfigPage />} />
             <Route path="instructors" element={<InstructorsAdminPage />} />
             <Route path="resources" element={<ResourcesAdminPage />} />
+            <Route path="reviews" element={<ReviewsPage />} />
+            <Route path="queries" element={<QueriesPage />} />
           </Route>
         </Routes>
       </AuthProvider>

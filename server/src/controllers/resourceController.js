@@ -53,7 +53,7 @@ const getResources = catchAsync(async (req, res) => {
   const booking = await Booking.findOne({
     slotId,
     studentId: req.user._id,
-    status: 'confirmed',
+    status: { $in: ['confirmed', 'completed'] },
     isDeleted: false,
   });
   if (!booking) {
@@ -79,7 +79,8 @@ const getResources = catchAsync(async (req, res) => {
 const getAdminResources = catchAsync(async (req, res) => {
   const resources = await Resource.find({ slotId: req.params.slotId, isDeleted: false })
     .sort({ sortOrder: 1, createdAt: 1 });
-  res.json({ success: true, resources });
+  const withUrls = await Promise.all(resources.map(withSignedUrl));
+  res.json({ success: true, resources: withUrls });
 });
 
 // ─────────────────────────────────────────────
@@ -116,7 +117,8 @@ const uploadResource = catchAsync(async (req, res) => {
     isRecording: markAsRecording,
   });
 
-  res.status(201).json({ success: true, resource });
+  const resourceWithUrl = await withSignedUrl(resource);
+  res.status(201).json({ success: true, resource: resourceWithUrl });
 });
 
 // ─────────────────────────────────────────────

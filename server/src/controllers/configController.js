@@ -21,6 +21,8 @@ const getPublicConfig = catchAsync(async (req, res) => {
     maintenanceMode: config.maintenanceMode,
     allowNewRegistrations: config.allowNewRegistrations,
     footerText: config.footerText,
+    allowReviews: config.allowReviews,
+    requireReviewApproval: config.requireReviewApproval,
   };
   res.json({ success: true, config: publicConfig });
 });

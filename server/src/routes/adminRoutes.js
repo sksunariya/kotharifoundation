@@ -10,6 +10,8 @@ const { getAllBookings, cancelBooking, updateMeetLink } = require('../controller
 const { getAdminPayments, verifyPayment, rejectPayment } = require('../controllers/paymentController');
 const { getAdminInstructors, createInstructor, updateInstructor, deleteInstructor } = require('../controllers/instructorController');
 const { getAdminResources, createResource, uploadResource, updateResource, deleteResource } = require('../controllers/resourceController');
+const { getAdminReviews, approveReview, rejectReview, deleteReview } = require('../controllers/reviewController');
+const { getAdminQueries, updateQuery, deleteQuery } = require('../controllers/queryController');
 const s3Upload = require('../config/s3Upload');
 
 router.use(protect, authorize('admin'));
@@ -58,5 +60,16 @@ router.post('/resources', createResource);
 router.put('/resources/:id', updateResource);
 router.delete('/resources/:id', deleteResource);
 router.post('/resources/upload', s3Upload.single('file'), uploadResource);
+
+// Reviews
+router.get('/reviews', getAdminReviews);
+router.put('/reviews/:id/approve', approveReview);
+router.put('/reviews/:id/reject', rejectReview);
+router.delete('/reviews/:id', deleteReview);
+
+// Queries
+router.get('/queries', getAdminQueries);
+router.put('/queries/:id', updateQuery);
+router.delete('/queries/:id', deleteQuery);
 
 module.exports = router;

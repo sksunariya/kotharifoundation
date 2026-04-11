@@ -30,6 +30,10 @@ const siteConfigSchema = new mongoose.Schema(
     maintenanceMode: { type: Boolean, default: false },
     allowNewRegistrations: { type: Boolean, default: true },
     footerText: { type: String, default: '© 2024 Kothari Foundation. All rights reserved.' },
+    siteUrl: { type: String, default: '' },
+    adminNotificationEmail: { type: String, default: '' },
+    allowReviews: { type: Boolean, default: true },
+    requireReviewApproval: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

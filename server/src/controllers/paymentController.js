@@ -19,9 +19,21 @@ const withScreenshotUrl = async (paymentObj) => {
   return paymentObj;
 };
 
+const validateUtr = (utr) => {
+  if (!utr || !utr.trim()) return 'UTR number is required.';
+  const cleaned = utr.trim();
+  if (!/^[A-Za-z0-9]{6,25}$/.test(cleaned)) {
+    return 'UTR must be 6–25 alphanumeric characters (letters and digits only, no spaces or symbols).';
+  }
+  return null;
+};
+
 // POST /api/payments — student submits UTR + screenshot
 const submitPayment = catchAsync(async (req, res) => {
   const { bookingId, utrNumber } = req.body;
+
+  const utrError = validateUtr(utrNumber);
+  if (utrError) throw new ApiError(400, utrError);
 
   const booking = await Booking.findById(bookingId).populate('studentId', 'name email');
   if (!booking || booking.isDeleted) throw new ApiError(404, 'Booking not found.');
@@ -69,6 +81,9 @@ const submitPayment = catchAsync(async (req, res) => {
 
 // PUT /api/payments/:id/resubmit — student resubmits after rejection
 const resubmitPayment = catchAsync(async (req, res) => {
+  const utrError = validateUtr(req.body.utrNumber);
+  if (utrError) throw new ApiError(400, utrError);
+
   const payment = await Payment.findById(req.params.id).populate({
     path: 'bookingId',
     populate: { path: 'studentId', select: 'name email' },

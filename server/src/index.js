@@ -18,6 +18,8 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const instructorRoutes = require('./routes/instructorRoutes');
 const resourceRoutes  = require('./routes/resourceRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const queryRoutes = require('./routes/queryRoutes');
 
 const app = express();
 
@@ -60,6 +62,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/instructors', instructorRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/queries', queryRoutes);
 
 // 404 handler
 app.use((req, res) => {

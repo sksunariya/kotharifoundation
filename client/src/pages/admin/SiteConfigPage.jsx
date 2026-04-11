@@ -37,6 +37,8 @@ const SiteConfigPage = () => {
   const tabs = [
     { id: 'general', label: 'General' },
     { id: 'payment', label: 'Payment' },
+    { id: 'notifications', label: 'Notifications' },
+    { id: 'reviews', label: 'Reviews' },
     { id: 'content', label: 'Content' },
     { id: 'social', label: 'Social' },
   ];
@@ -85,6 +87,11 @@ const SiteConfigPage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Verification Time Note</label>
                 <input className="input" value={config.verificationTimeNote || ''} onChange={e => updateField('verificationTimeNote', e.target.value)} />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Site URL</label>
+                <input type="url" className="input" value={config.siteUrl || ''} onChange={e => updateField('siteUrl', e.target.value)} placeholder="https://kotharifoundation.com" />
+                <p className="text-xs text-gray-400 mt-1">Used in password reset emails. Leave blank to use server default.</p>
+              </div>
               <div className="flex items-center gap-4 sm:col-span-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={config.maintenanceMode || false} onChange={e => updateField('maintenanceMode', e.target.checked)} />
@@ -95,6 +102,52 @@ const SiteConfigPage = () => {
                   <span className="text-sm text-gray-700">Allow New Registrations</span>
                 </label>
               </div>
+            </div>
+          )}
+
+          {tab === 'notifications' && (
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Admin Notification Email</label>
+                <input
+                  type="email"
+                  className="input"
+                  value={config.adminNotificationEmail || ''}
+                  onChange={e => updateField('adminNotificationEmail', e.target.value)}
+                  placeholder="admin@kotharifoundation.com"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  When a user submits a query, a notification will be sent to this email. Leave blank to disable email notifications.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {tab === 'reviews' && (
+            <div className="grid grid-cols-1 gap-4">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.allowReviews !== false}
+                    onChange={e => updateField('allowReviews', e.target.checked)}
+                  />
+                  <span className="text-sm text-gray-700">Allow Users to Submit Reviews</span>
+                </label>
+              </div>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.requireReviewApproval !== false}
+                    onChange={e => updateField('requireReviewApproval', e.target.checked)}
+                  />
+                  <span className="text-sm text-gray-700">Require Admin Approval Before Publishing Reviews</span>
+                </label>
+              </div>
+              <p className="text-xs text-gray-500">
+                When approval is required, submitted reviews will appear in <strong>Reviews → Pending</strong> for you to approve or reject.
+              </p>
             </div>
           )}
 

@@ -24,7 +24,29 @@ const BookSessionPage = () => {
   // Payment submission
   const [utrNumber, setUtrNumber] = useState('');
   const [screenshot, setScreenshot] = useState(null);
+  const [screenshotError, setScreenshotError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setScreenshotError('');
+    if (!file) { setScreenshot(null); return; }
+    if (file.size > MAX_FILE_SIZE) {
+      setScreenshotError('File size must be under 5 MB.');
+      e.target.value = '';
+      setScreenshot(null);
+      return;
+    }
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      setScreenshotError('Only image files or PDF are accepted.');
+      e.target.value = '';
+      setScreenshot(null);
+      return;
+    }
+    setScreenshot(file);
+  };
 
   useEffect(() => {
     slotAPI
@@ -66,18 +88,24 @@ const BookSessionPage = () => {
     }
   };
 
+  const validateUtr = (val) => {
+    if (!val.trim()) return 'UTR number is required.';
+    if (!/^[A-Za-z0-9]{12,25}$/.test(val.trim())) return 'UTR must be 12-25 alphanumeric characters (no spaces or symbols).';
+    return '';
+  };
+
   const handleSubmitPayment = async (e) => {
     e.preventDefault();
-    if (!utrNumber.trim()) {
-      toast.error('Please enter your UTR number.');
-      return;
-    }
+    const utrErr = validateUtr(utrNumber);
+    if (utrErr) { toast.error(utrErr); return; }
+    if (!screenshot) { toast.error('Payment screenshot is required.'); return; }
+    if (screenshotError) return;
     setSubmitting(true);
     try {
       const formData = new FormData();
       formData.append('bookingId', booking._id);
       formData.append('utrNumber', utrNumber);
-      if (screenshot) formData.append('screenshot', screenshot);
+      formData.append('screenshot', screenshot);
       await paymentAPI.submit(formData);
       setStep('submitted');
       toast.success('Payment details submitted! We will verify shortly.');
@@ -158,22 +186,33 @@ const BookSessionPage = () => {
                 <input
                   type="text"
                   className="input font-mono"
-                  placeholder="12-digit UTR number (e.g., 123456789012)"
+                  placeholder="e.g. 123456789012"
                   value={utrNumber}
-                  onChange={(e) => setUtrNumber(e.target.value)}
+                  onChange={(e) => setUtrNumber(e.target.value.replace(/[^A-Za-z0-9]/g, ''))}
                   required
                   maxLength={25}
                 />
-                <p className="text-xs text-gray-400 mt-1">Find the UTR in your UPI app transaction history</p>
+                <p className="text-xs text-gray-400 mt-1">Find it in your UPI app transaction history</p>
+                {utrNumber && validateUtr(utrNumber) && (
+                  <p className="text-xs text-red-500 mt-1">{validateUtr(utrNumber)}</p>
+                )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Screenshot</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Payment Screenshot <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="file"
-                  accept="image/*"
-                  onChange={(e) => setScreenshot(e.target.files[0])}
+                  accept="image/*,application/pdf"
+                  onChange={handleFileChange}
+                  required
                   className="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
                 />
+                <p className="text-xs text-gray-400 mt-1">Accepted: images (JPEG, PNG, etc.) or PDF · Max 5 MB</p>
+                {screenshotError && <p className="text-xs text-red-600 mt-1">{screenshotError}</p>}
+                {screenshot && !screenshotError && (
+                  <p className="text-xs text-green-600 mt-1">✓ {screenshot.name} ({(screenshot.size / 1024).toFixed(0)} KB)</p>
+                )}
               </div>
               <button type="submit" disabled={submitting} className="btn-primary w-full py-2.5">
                 {submitting ? 'Submitting...' : 'Submit Payment Details'}

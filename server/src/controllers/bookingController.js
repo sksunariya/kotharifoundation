@@ -134,6 +134,28 @@ const cancelBooking = catchAsync(async (req, res) => {
   res.json({ success: true, booking });
 });
 
+// GET /api/bookings/:id/resubmit-details — get QR + UPI details for resubmitting a rejected payment
+const getResubmitDetails = catchAsync(async (req, res) => {
+  const booking = await Booking.findOne({ _id: req.params.id, studentId: req.user._id, isDeleted: false })
+    .populate({ path: 'slotId', populate: { path: 'categoryId', select: 'name icon' } });
+
+  if (!booking) throw new ApiError(404, 'Booking not found.');
+  if (booking.status !== 'rejected') throw new ApiError(400, 'Only rejected bookings can be resubmitted.');
+
+  const payment = await Payment.findOne({ bookingId: booking._id, isDeleted: false });
+  if (!payment) throw new ApiError(404, 'Payment record not found.');
+
+  const config = await SiteConfig.getConfig();
+  const qrCode = await generateUpiQR({
+    upiId: config.upiId,
+    displayName: config.upiDisplayName,
+    amount: booking.slotId.price,
+    bookingRef: booking.bookingRef,
+  });
+
+  res.json({ success: true, booking, paymentId: payment._id, qrCode, upiId: config.upiId, upiDisplayName: config.upiDisplayName });
+});
+
 // PUT /api/admin/bookings/:id/meet-link — admin sets meet link on a specific booking
 const updateMeetLink = catchAsync(async (req, res) => {
   const { meetLink } = req.body;
@@ -149,4 +171,4 @@ const updateMeetLink = catchAsync(async (req, res) => {
   res.json({ success: true, booking });
 });
 
-module.exports = { createBooking, getMyBookings, getBookingStatus, getAllBookings, cancelBooking, updateMeetLink };
+module.exports = { createBooking, getMyBookings, getBookingStatus, getResubmitDetails, getAllBookings, cancelBooking, updateMeetLink };
