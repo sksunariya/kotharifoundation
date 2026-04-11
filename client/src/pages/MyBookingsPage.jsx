@@ -168,7 +168,7 @@ const MyBookingsPage = () => {
                   </button>
                 )}
 
-                {booking.status === 'completed' && (
+                {['confirmed', 'completed'].includes(booking.status) && (
                   <div className="mb-3">
                     {!existingReview ? (
                       <button

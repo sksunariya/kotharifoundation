@@ -14,7 +14,7 @@ const submitReview = catchAsync(async (req, res) => {
 
   const booking = await Booking.findOne({ _id: bookingId, studentId: req.user._id, isDeleted: false });
   if (!booking) throw new ApiError(404, 'Booking not found.');
-  if (booking.status !== 'completed') throw new ApiError(400, 'Reviews can only be submitted for completed sessions.');
+  if (['confirmed', 'completed'].includes(booking.status)) throw new ApiError(400, 'Reviews can only be submitted for completed sessions.');
 
   const existing = await Review.findOne({ bookingId, isDeleted: false });
   if (existing) throw new ApiError(400, 'You have already submitted a review for this booking.');
