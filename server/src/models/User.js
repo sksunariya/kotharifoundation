@@ -16,6 +16,9 @@ const userSchema = new mongoose.Schema(
     deletedAt: { type: Date },
     passwordResetToken: { type: String, select: false },
     passwordResetExpires: { type: Date, select: false },
+    emailVerificationOtp: { type: String, select: false },
+    emailVerificationOtpExpires: { type: Date, select: false },
+    isEmailVerified: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

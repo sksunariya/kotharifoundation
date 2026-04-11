@@ -1,4 +1,8 @@
+import { useAuth } from '../context/AuthContext';
+
 const Footer = ({ config }) => {
+  const { isAuthenticated } = useAuth();
+
   return (
     <footer className="bg-gray-900 text-gray-300 py-10 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -15,7 +19,10 @@ const Footer = ({ config }) => {
             <ul className="space-y-2 text-sm">
               <li><a href="/sessions" className="hover:text-white transition-colors">Browse Sessions</a></li>
               <li><a href="/booking-status" className="hover:text-white transition-colors">Check Booking Status</a></li>
-              <li><a href="/register" className="hover:text-white transition-colors">Create Account</a></li>
+              <li><a href="/contact" className="hover:text-white transition-colors">Contact Us</a></li>
+              {!isAuthenticated && (
+                <li><a href="/register" className="hover:text-white transition-colors">Create Account</a></li>
+              )}
             </ul>
           </div>
           <div>

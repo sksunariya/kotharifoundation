@@ -27,6 +27,28 @@ const sendEmail = async ({ to, subject, html, text }) => {
   });
 };
 
+const sendOtpEmail = async ({ email, name, otp }) => {
+  await sendEmail({
+    to: email,
+    subject: 'Verify Your Email - Kothari Foundation',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">Verify Your Email</h2>
+        <p>Dear ${name},</p>
+        <p>Thank you for registering with Kothari Foundation. Use the OTP below to verify your email address:</p>
+        <div style="text-align: center; margin: 32px 0;">
+          <div style="display: inline-block; background: #f1f5f9; border: 2px dashed #2563eb; border-radius: 12px; padding: 20px 40px;">
+            <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #2563eb;">${otp}</span>
+          </div>
+        </div>
+        <p style="color: #6b7280; font-size: 14px;">This OTP expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>
+        <p>If you did not create an account, you can safely ignore this email.</p>
+        <p>Best regards,<br>Kothari Foundation Team</p>
+      </div>
+    `,
+  });
+};
+
 const sendBookingConfirmation = async ({ studentEmail, studentName, bookingRef, slotTitle, startTime, meetLink }) => {
   const formattedDate = new Date(startTime).toLocaleString('en-IN', {
     dateStyle: 'full',
@@ -110,4 +132,33 @@ const sendPasswordReset = async ({ email, name, resetUrl }) => {
   });
 };
 
-module.exports = { sendEmail, sendBookingConfirmation, sendPaymentRejection, sendBookingCancellation, sendPasswordReset };
+const sendQueryNotification = async ({ adminEmail, queryName, queryEmail, subject, message }) => {
+  await sendEmail({
+    to: adminEmail,
+    subject: `New Query Received: ${subject}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">New Query Received</h2>
+        <p>A new query has been submitted on the Kothari Foundation portal.</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <tr><td style="padding: 8px; font-weight: bold; background:#f8fafc;">Name:</td><td style="padding: 8px;">${queryName}</td></tr>
+          <tr><td style="padding: 8px; font-weight: bold; background:#f8fafc;">Email:</td><td style="padding: 8px;">${queryEmail}</td></tr>
+          <tr><td style="padding: 8px; font-weight: bold; background:#f8fafc;">Subject:</td><td style="padding: 8px;">${subject}</td></tr>
+          <tr><td style="padding: 8px; font-weight: bold; background:#f8fafc; vertical-align:top;">Message:</td><td style="padding: 8px;">${message}</td></tr>
+        </table>
+        <p>Please log in to the admin portal to view and respond to this query.</p>
+        <p>Best regards,<br>Kothari Foundation System</p>
+      </div>
+    `,
+  });
+};
+
+module.exports = {
+  sendEmail,
+  sendOtpEmail,
+  sendBookingConfirmation,
+  sendPaymentRejection,
+  sendBookingCancellation,
+  sendPasswordReset,
+  sendQueryNotification,
+};

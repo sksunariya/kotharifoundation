@@ -3,6 +3,8 @@ import api from './axios';
 // Auth
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
+  verifyOtp: (email, otp) => api.post('/auth/verify-otp', { email, otp }),
+  resendOtp: (email) => api.post('/auth/resend-otp', { email }),
   login: (data) => api.post('/auth/login', data),
   logout: () => api.post('/auth/logout'),
   getMe: () => api.get('/auth/me'),
@@ -40,6 +42,7 @@ export const bookingAPI = {
   create: (data) => api.post('/bookings', data),
   getMy: () => api.get('/bookings/my'),
   getStatus: (ref) => api.get(`/bookings/status/${ref}`),
+  getResubmitDetails: (id) => api.get(`/bookings/${id}/resubmit-details`),
   getAll: (params) => api.get('/admin/bookings', { params }),
   cancel: (id) => api.put(`/admin/bookings/${id}/cancel`),
   setMeetLink: (id, meetLink) => api.put(`/admin/bookings/${id}/meet-link`, { meetLink }),
@@ -82,4 +85,23 @@ export const instructorAPI = {
   create: (data) => api.post('/admin/instructors', data),
   update: (id, data) => api.put(`/admin/instructors/${id}`, data),
   delete: (id) => api.delete(`/admin/instructors/${id}`),
+};
+
+// Reviews
+export const reviewAPI = {
+  submit: (data) => api.post('/reviews', data),
+  getPublished: () => api.get('/reviews/published'),
+  getMy: () => api.get('/reviews/my'),
+  getAdmin: (params) => api.get('/admin/reviews', { params }),
+  approve: (id, data) => api.put(`/admin/reviews/${id}/approve`, data),
+  reject: (id, data) => api.put(`/admin/reviews/${id}/reject`, data),
+  delete: (id) => api.delete(`/admin/reviews/${id}`),
+};
+
+// Queries
+export const queryAPI = {
+  submit: (data) => api.post('/queries', data),
+  getAdmin: (params) => api.get('/admin/queries', { params }),
+  update: (id, data) => api.put(`/admin/queries/${id}`, data),
+  delete: (id) => api.delete(`/admin/queries/${id}`),
 };

@@ -1,19 +1,92 @@
 const crypto = require('crypto');
 const User = require('../models/User');
+const SiteConfig = require('../models/SiteConfig');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { sendTokens, verifyRefreshToken, generateAccessToken } = require('../utils/tokenHelper');
-const { sendPasswordReset } = require('../services/email');
+const { sendPasswordReset, sendOtpEmail } = require('../services/email');
+
+const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 // POST /api/auth/register
+// Creates user (unverified), sends OTP. Does NOT log in yet.
 const register = catchAsync(async (req, res) => {
   const { name, email, password, phone } = req.body;
 
-  const existingUser = await User.findOne({ email });
-  if (existingUser) throw new ApiError(400, 'Email already registered.');
+  const existingUser = await User.findOne({ email: email.toLowerCase() });
+  if (existingUser) {
+    if (existingUser.isEmailVerified) {
+      throw new ApiError(400, 'Email already registered.');
+    }
+    // Update user details in case they changed them and resend OTP
+    existingUser.name = name;
+    if (phone) existingUser.phone = phone;
+    existingUser.password = password; // triggers pre-save hash
+    const otp = generateOtp();
+    existingUser.emailVerificationOtp = otp;
+    existingUser.emailVerificationOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await existingUser.save();
+    await sendOtpEmail({ email: existingUser.email, name: existingUser.name, otp });
+    return res.json({ success: true, requiresVerification: true, message: 'OTP resent to your email.' });
+  }
 
-  const user = await User.create({ name, email, password, phone });
-  sendTokens(res, user, 201);
+  const otp = generateOtp();
+  const user = new User({
+    name,
+    email,
+    password,
+    phone,
+    isEmailVerified: false,
+    emailVerificationOtp: otp,
+    emailVerificationOtpExpires: new Date(Date.now() + 10 * 60 * 1000),
+  });
+  await user.save();
+
+  await sendOtpEmail({ email: user.email, name: user.name, otp });
+
+  res.status(201).json({ success: true, requiresVerification: true, message: 'OTP sent to your email. Please verify to complete registration.' });
+});
+
+// POST /api/auth/verify-otp
+const verifyOtp = catchAsync(async (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) throw new ApiError(400, 'Email and OTP are required.');
+
+  const user = await User.findOne({ email: email.toLowerCase() }).select('+emailVerificationOtp +emailVerificationOtpExpires');
+  if (!user) throw new ApiError(400, 'Invalid request.');
+  if (user.isEmailVerified) throw new ApiError(400, 'Email already verified.');
+  if (!user.emailVerificationOtp || user.emailVerificationOtpExpires < Date.now()) {
+    throw new ApiError(400, 'OTP has expired. Please request a new one.');
+  }
+  if (user.emailVerificationOtp !== otp.trim()) {
+    throw new ApiError(400, 'Invalid OTP. Please try again.');
+  }
+
+  user.isEmailVerified = true;
+  user.isVerified = true;
+  user.emailVerificationOtp = undefined;
+  user.emailVerificationOtpExpires = undefined;
+  await user.save({ validateBeforeSave: false });
+
+  sendTokens(res, user, 200);
+});
+
+// POST /api/auth/resend-otp
+const resendOtp = catchAsync(async (req, res) => {
+  const { email } = req.body;
+  if (!email) throw new ApiError(400, 'Email is required.');
+
+  const user = await User.findOne({ email: email.toLowerCase() });
+  if (!user) throw new ApiError(400, 'No account found with this email.');
+  if (user.isEmailVerified) throw new ApiError(400, 'Email already verified.');
+
+  const otp = generateOtp();
+  user.emailVerificationOtp = otp;
+  user.emailVerificationOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+  await user.save({ validateBeforeSave: false });
+
+  await sendOtpEmail({ email: user.email, name: user.name, otp });
+  res.json({ success: true, message: 'OTP resent to your email.' });
 });
 
 // POST /api/auth/login
@@ -26,6 +99,7 @@ const login = catchAsync(async (req, res) => {
     throw new ApiError(401, 'Invalid email or password.');
   }
   if (!user.isActive) throw new ApiError(403, 'Your account has been deactivated.');
+  if (!user.isEmailVerified) throw new ApiError(403, 'Please verify your email before logging in.');
 
   sendTokens(res, user);
 });
@@ -61,16 +135,19 @@ const forgotPassword = catchAsync(async (req, res) => {
 
   const user = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
 
-  // Always respond the same way to prevent email enumeration
   if (user && user.isActive) {
     const rawToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
     user.passwordResetToken = hashedToken;
-    user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000);
     await user.save({ validateBeforeSave: false });
 
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${rawToken}`;
+    // Use siteUrl from config or fall back to env variable
+    const config = await SiteConfig.getConfig();
+    const baseUrl = (config.siteUrl && config.siteUrl.trim()) || process.env.CLIENT_URL || 'http://localhost:5173';
+    const resetUrl = `${baseUrl.replace(/\/$/, '')}/reset-password/${rawToken}`;
+
     try {
       await sendPasswordReset({ email: user.email, name: user.name, resetUrl });
     } catch {
@@ -107,4 +184,4 @@ const resetPassword = catchAsync(async (req, res) => {
   sendTokens(res, user);
 });
 
-module.exports = { register, login, refresh, logout, getMe, forgotPassword, resetPassword };
+module.exports = { register, login, refresh, logout, getMe, forgotPassword, resetPassword, verifyOtp, resendOtp };
