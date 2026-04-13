@@ -25,7 +25,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" onClick={close} className="flex items-center gap-2 flex-shrink-0">
             <span className="text-2xl">🎓</span>
-            <span className="font-bold text-lg sm:text-xl text-primary-700">Kothari Foundation</span>
+            <span className="font-bold text-lg sm:text-xl text-primary-700">Kothari Education</span>
           </Link>
 
           {/* Desktop nav */}
@@ -33,8 +33,8 @@ const Navbar = () => {
             <Link to="/sessions" className="text-gray-600 hover:text-primary-600 font-medium text-sm">
               Browse Sessions
             </Link>
-            <Link to="/booking-status" className="text-gray-600 hover:text-primary-600 font-medium text-sm">
-              Check Status
+            <Link to="/contact" className="text-gray-600 hover:text-primary-600 font-medium text-sm">
+              Contact Us
             </Link>
             {isAuthenticated ? (
               <>

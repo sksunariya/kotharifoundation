@@ -10,7 +10,7 @@ const Footer = ({ config }) => {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-2xl">🎓</span>
-              <span className="font-bold text-white text-lg">{config?.platformName || 'Kothari Foundation'}</span>
+              <span className="font-bold text-white text-lg">{config?.platformName || 'Kothari Education'}</span>
             </div>
             <p className="text-sm text-gray-400">{config?.tagline}</p>
           </div>
