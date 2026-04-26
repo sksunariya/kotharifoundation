@@ -20,6 +20,7 @@ const BookSessionPage = () => {
   const [upiDisplayName, setUpiDisplayName] = useState('');
   const [bookingLoading, setBookingLoading] = useState(false);
   const [notes, setNotes] = useState('');
+  const [isFree, setIsFree] = useState(false);
 
   // Payment submission
   const [utrNumber, setUtrNumber] = useState('');
@@ -58,10 +59,15 @@ const BookSessionPage = () => {
           try {
             const bookingRes = await bookingAPI.create({ slotId: id });
             setBooking(bookingRes.data.booking);
-            setQrCode(bookingRes.data.qrCode);
-            setUpiId(bookingRes.data.upiId);
-            setUpiDisplayName(bookingRes.data.upiDisplayName);
-            setStep('payment');
+            if (bookingRes.data.isFree) {
+              setIsFree(true);
+              setStep('submitted');
+            } else {
+              setQrCode(bookingRes.data.qrCode);
+              setUpiId(bookingRes.data.upiId);
+              setUpiDisplayName(bookingRes.data.upiDisplayName);
+              setStep('payment');
+            }
           } catch (err) {
             toast.error(err.response?.data?.message || 'Could not load payment details.');
           }
@@ -76,11 +82,17 @@ const BookSessionPage = () => {
     try {
       const res = await bookingAPI.create({ slotId: id, notes });
       setBooking(res.data.booking);
-      setQrCode(res.data.qrCode);
-      setUpiId(res.data.upiId);
-      setUpiDisplayName(res.data.upiDisplayName);
-      setStep('payment');
-      if (!isResume) toast.success('Booking created! Please complete payment.');
+      if (res.data.isFree) {
+        setIsFree(true);
+        setStep('submitted');
+        toast.success('Session booked successfully!');
+      } else {
+        setQrCode(res.data.qrCode);
+        setUpiId(res.data.upiId);
+        setUpiDisplayName(res.data.upiDisplayName);
+        setStep('payment');
+        if (!isResume) toast.success('Booking created! Please complete payment.');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Booking failed. Please try again.');
     } finally {
@@ -155,7 +167,7 @@ const BookSessionPage = () => {
           <div className="flex gap-3">
             <button onClick={() => navigate(-1)} className="btn-secondary flex-1">Cancel</button>
             <button onClick={handleConfirmBooking} disabled={bookingLoading} className="btn-primary flex-1">
-              {bookingLoading ? 'Creating booking...' : `Confirm & Pay ${formatINR(slot.price)}`}
+              {bookingLoading ? 'Creating booking...' : slot.price === 0 ? 'Confirm Booking' : `Confirm & Pay ${formatINR(slot.price)}`}
             </button>
           </div>
         </div>
@@ -225,9 +237,13 @@ const BookSessionPage = () => {
       {step === 'submitted' && (
         <div className="text-center py-10">
           <div className="text-6xl mb-4">✅</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Payment Submitted!</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{isFree ? 'Booking Confirmed!' : 'Payment Submitted!'}</h2>
           <p className="text-gray-500 mb-2">Your booking reference: <span className="font-mono font-semibold">{booking?.bookingRef}</span></p>
-          <p className="text-gray-500 mb-8">Our team will verify your payment and send you the Google Meet link via email.</p>
+          <p className="text-gray-500 mb-8">
+            {isFree
+              ? 'Your session has been booked. You will receive the Google Meet link via email before the session.'
+              : 'Our team will verify your payment and send you the Google Meet link via email.'}
+          </p>
           <div className="flex gap-3 justify-center">
             <button onClick={() => navigate('/my-bookings')} className="btn-primary">View My Bookings</button>
             <button onClick={() => navigate('/booking-status')} className="btn-secondary">Check Status</button>

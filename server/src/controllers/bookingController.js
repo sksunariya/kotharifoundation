@@ -41,6 +41,15 @@ const createBooking = catchAsync(async (req, res) => {
 
   const booking = await Booking.create({ studentId: req.user._id, slotId, notes });
 
+  // Free session — confirm immediately, no payment required
+  if (slot.price === 0) {
+    booking.status = 'confirmed';
+    await booking.save();
+    await SessionSlot.findByIdAndUpdate(slotId, { $inc: { bookedCount: 1 } });
+    await booking.populate([{ path: 'slotId', populate: { path: 'categoryId', select: 'name icon' } }]);
+    return res.status(201).json({ success: true, booking, isFree: true });
+  }
+
   // Create pending payment record
   await Payment.create({ bookingId: booking._id, amount: slot.price });
 
