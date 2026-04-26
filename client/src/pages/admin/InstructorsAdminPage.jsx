@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { instructorAPI } from '../../api/endpoints';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import useFetch from '../../hooks/useFetch';
@@ -21,11 +21,18 @@ const InstructorsAdminPage = () => {
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  // Photo upload state
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const fileInputRef = useRef(null);
+
   const instructors = data?.instructors || [];
 
   const openNew = () => {
     setForm(defaultForm);
     setEditId(null);
+    setPhotoFile(null);
+    setPhotoPreview(null);
     setShowForm(true);
   };
 
@@ -35,7 +42,10 @@ const InstructorsAdminPage = () => {
       title: ins.title,
       shortBio: ins.shortBio || '',
       detailedBio: ins.detailedBio || '',
-      photo: ins.photo || '',
+      // If the photo is S3-backed, keep form.photo empty so we don't accidentally
+      // send the short-lived presigned URL back to the server on save.
+      // The presigned URL is only used for the preview below.
+      photo: ins.s3Key ? '' : (ins.photo || ''),
       expertise: (ins.expertise || []).join(', '),
       experience: ins.experience ?? '',
       qualifications: joinLines(ins.qualifications),
@@ -51,33 +61,66 @@ const InstructorsAdminPage = () => {
       },
     });
     setEditId(ins._id);
+    setPhotoFile(null);
+    // Show existing photo as preview (either S3 presigned or external URL)
+    setPhotoPreview(ins.photo || null);
     setShowForm(true);
   };
 
-  const buildPayload = () => ({
-    name: form.name,
-    title: form.title,
-    shortBio: form.shortBio,
-    detailedBio: form.detailedBio,
-    photo: form.photo,
-    expertise: form.expertise.split(',').map(s => s.trim()).filter(Boolean),
-    experience: form.experience !== '' ? Number(form.experience) : undefined,
-    qualifications: parseLines(form.qualifications),
-    achievements: parseLines(form.achievements),
-    sortOrder: Number(form.sortOrder),
-    isActive: form.isActive,
-    socialLinks: form.socialLinks,
-  });
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    // Clear the URL field when a file is chosen
+    setField('photo', '');
+  };
+
+  const clearPhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setField('photo', '');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const buildFormData = () => {
+    const fd = new FormData();
+    fd.append('name', form.name);
+    fd.append('title', form.title);
+    fd.append('shortBio', form.shortBio);
+    fd.append('detailedBio', form.detailedBio);
+    fd.append('experience', form.experience !== '' ? form.experience : '');
+    fd.append('sortOrder', form.sortOrder);
+    fd.append('isActive', form.isActive);
+
+    // Arrays & objects serialized as JSON for multipart
+    fd.append('expertise', JSON.stringify(
+      form.expertise.split(',').map(s => s.trim()).filter(Boolean)
+    ));
+    fd.append('qualifications', JSON.stringify(parseLines(form.qualifications)));
+    fd.append('achievements', JSON.stringify(parseLines(form.achievements)));
+    fd.append('socialLinks', JSON.stringify(form.socialLinks));
+
+    if (photoFile) {
+      fd.append('photo', photoFile);
+    } else {
+      // Send the URL (may be empty string to clear, or an external URL)
+      fd.append('photo', form.photo);
+    }
+
+    return fd;
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
+      const fd = buildFormData();
       if (editId) {
-        await instructorAPI.update(editId, buildPayload());
+        await instructorAPI.update(editId, fd);
         toast.success('Instructor updated.');
       } else {
-        await instructorAPI.create(buildPayload());
+        await instructorAPI.create(fd);
         toast.success('Instructor created.');
       }
       setShowForm(false);
@@ -126,10 +169,84 @@ const InstructorsAdminPage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title / Role <span className="text-red-500">*</span></label>
                 <input className="input" placeholder="e.g. Senior Engineer at Google" value={form.title} onChange={e => setField('title', e.target.value)} required />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Photo URL</label>
-                <input className="input" placeholder="https://..." value={form.photo} onChange={e => setField('photo', e.target.value)} />
+
+              {/* Photo field — upload + URL fallback */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Photo</label>
+                <div className="flex flex-col sm:flex-row gap-4 items-start">
+                  {/* Preview */}
+                  {photoPreview ? (
+                    <div className="relative flex-shrink-0">
+                      <img
+                        src={photoPreview}
+                        alt="Preview"
+                        className="w-20 h-20 rounded-xl object-cover border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={clearPhoto}
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600"
+                        title="Remove photo"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 flex-shrink-0">
+                      <span className="text-2xl">📷</span>
+                    </div>
+                  )}
+
+                  <div className="flex-1 space-y-2">
+                    {/* File upload button */}
+                    <div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        id="photoFileInput"
+                        onChange={handlePhotoChange}
+                      />
+                      <label
+                        htmlFor="photoFileInput"
+                        className="btn-secondary text-sm cursor-pointer inline-block"
+                      >
+                        {photoFile ? '✓ ' + photoFile.name : 'Upload Photo'}
+                      </label>
+                      <p className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP · max 10 MB</p>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 border-t border-gray-200" />
+                      <span className="text-xs text-gray-400">or paste URL</span>
+                      <div className="flex-1 border-t border-gray-200" />
+                    </div>
+
+                    {/* External URL fallback */}
+                    <input
+                      className="input"
+                      placeholder="https://example.com/photo.jpg"
+                      value={form.photo}
+                      onChange={e => {
+                        setField('photo', e.target.value);
+                        if (e.target.value) {
+                          // URL typed — clear any file selection and show URL as preview
+                          setPhotoFile(null);
+                          setPhotoPreview(e.target.value);
+                          if (fileInputRef.current) fileInputRef.current.value = '';
+                        } else {
+                          // URL cleared — remove the preview too
+                          setPhotoPreview(null);
+                        }
+                      }}
+                      disabled={!!photoFile}
+                    />
+                  </div>
+                </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
                 <input type="number" className="input" min={0} value={form.experience} onChange={e => setField('experience', e.target.value)} />

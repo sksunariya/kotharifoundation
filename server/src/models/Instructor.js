@@ -6,7 +6,8 @@ const instructorSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true }, // e.g. "Senior Software Engineer at Google"
     shortBio: { type: String, trim: true },              // shown on landing page card
     detailedBio: { type: String, trim: true },           // shown on full profile / instructors page
-    photo: { type: String },                             // image URL
+    photo: { type: String },                             // external image URL (fallback)
+    s3Key: { type: String },                             // S3 object key for uploaded photos
     expertise: [{ type: String, trim: true }],           // e.g. ["DSA", "System Design", "FAANG Prep"]
     experience: { type: Number },                        // years of experience
     qualifications: [{ type: String, trim: true }],      // e.g. ["B.Tech IIT Delhi", "M.S. Stanford"]

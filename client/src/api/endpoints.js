@@ -83,8 +83,8 @@ export const instructorAPI = {
   getAll: () => api.get('/instructors'),
   getOne: (id) => api.get(`/instructors/${id}`),
   getAdminAll: () => api.get('/admin/instructors'),
-  create: (data) => api.post('/admin/instructors', data),
-  update: (id, data) => api.put(`/admin/instructors/${id}`, data),
+  create: (formData) => api.post('/admin/instructors', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  update: (id, formData) => api.put(`/admin/instructors/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   delete: (id) => api.delete(`/admin/instructors/${id}`),
 };
 

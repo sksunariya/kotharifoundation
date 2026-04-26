@@ -52,8 +52,8 @@ router.delete('/users/:id', deleteUser);
 
 // Instructors
 router.get('/instructors', getAdminInstructors);
-router.post('/instructors', createInstructor);
-router.put('/instructors/:id', updateInstructor);
+router.post('/instructors', imageUpload.single('photo'), createInstructor);
+router.put('/instructors/:id', imageUpload.single('photo'), updateInstructor);
 router.delete('/instructors/:id', deleteInstructor);
 
 // Resources
