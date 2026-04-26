@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 
 const defaultForm = {
   categoryId: '', title: '', description: '', startTime: '', endTime: '',
-  price: '', capacity: 1, isActive: true,
+  price: '', capacity: 1, isActive: true, autoSchedule: false, autoScheduleDays: 2,
 };
 
 // UTC stored in DB → IST string for datetime-local input ("YYYY-MM-DDThh:mm")
@@ -96,6 +96,28 @@ const SlotModal = ({ editId, form, setForm, categories, saving, onSave, onClose 
           <label htmlFor="slotActive" className="text-sm text-gray-700">Active</label>
         </div>
 
+        <div className="flex items-center gap-2">
+          <input type="checkbox" id="slotAutoSchedule" checked={form.autoSchedule} onChange={e => setForm({ ...form, autoSchedule: e.target.checked })} />
+          <label htmlFor="slotAutoSchedule" className="text-sm text-gray-700">Auto Schedule</label>
+        </div>
+
+        {form.autoSchedule && (
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Reschedule after (days)
+              <span className="ml-1 text-xs text-gray-400">— if no bookings when session time passes</span>
+            </label>
+            <input
+              type="number"
+              className="input"
+              value={form.autoScheduleDays}
+              onChange={e => setForm({ ...form, autoScheduleDays: parseInt(e.target.value) || 1 })}
+              min={1}
+              required
+            />
+          </div>
+        )}
+
         <div className="sm:col-span-2 flex gap-3 pt-2">
           <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
           <button type="submit" disabled={saving} className="btn-primary flex-1">
@@ -131,6 +153,8 @@ const SlotsPage = () => {
       price: slot.price,
       capacity: slot.capacity,
       isActive: slot.isActive,
+      autoSchedule: slot.autoSchedule || false,
+      autoScheduleDays: slot.autoScheduleDays ?? 2,
     });
     setEditId(slot._id);
     setShowModal(true);
@@ -236,6 +260,9 @@ const SlotsPage = () => {
                         {new Date(slot.startTime) < new Date() && (
                           <span className="badge bg-orange-100 text-orange-600">Past</span>
                         )}
+                        {slot.autoSchedule && (
+                          <span className="badge bg-blue-100 text-blue-600">Auto +{slot.autoScheduleDays}d</span>
+                        )}
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -268,6 +295,9 @@ const SlotsPage = () => {
                     </span>
                     {new Date(slot.startTime) < new Date() && (
                       <span className="badge bg-orange-100 text-orange-600">Past</span>
+                    )}
+                    {slot.autoSchedule && (
+                      <span className="badge bg-blue-100 text-blue-600">Auto +{slot.autoScheduleDays}d</span>
                     )}
                   </div>
                 </div>

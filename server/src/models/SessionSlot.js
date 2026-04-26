@@ -16,6 +16,8 @@ const sessionSlotSchema = new mongoose.Schema(
     tags: [{ type: String, trim: true }],
     isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date },
+    autoSchedule: { type: Boolean, default: false },
+    autoScheduleDays: { type: Number, default: 2, min: 1 },
   },
   { timestamps: true }
 );

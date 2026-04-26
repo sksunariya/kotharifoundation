@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
 
 const connectDB = require('./config/db');
+const { startAutoScheduler } = require('./services/autoScheduler');
 const errorHandler = require('./middleware/errorHandler');
 const requestLogger = require('./middleware/requestLogger');
 
@@ -26,6 +27,9 @@ const app = express();
 
 // Connect to database
 connectDB();
+
+// Start background jobs
+startAutoScheduler();
 
 // Security middleware
 app.use(helmet());
