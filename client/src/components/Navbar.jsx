@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSiteConfig } from '../context/SiteConfigContext';
 import toast from 'react-hot-toast';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const siteConfig = useSiteConfig();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -24,7 +26,10 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" onClick={close} className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-2xl">🎓</span>
+            {siteConfig?.logoUrl
+              ? <img src={siteConfig.logoUrl} alt="Logo" className="h-8 w-auto object-contain" />
+              : <span className="text-2xl">🎓</span>
+            }
             <span className="font-bold text-lg sm:text-xl text-primary-700">Kothari Education</span>
           </Link>
 

@@ -35,6 +35,10 @@ const siteConfigSchema = new mongoose.Schema(
     allowReviews: { type: Boolean, default: true },
     requireReviewApproval: { type: Boolean, default: true },
     carouselInterval: { type: Number, default: 4 }, // seconds
+    logoUrl: { type: String, default: '' },
+    logoS3Key: { type: String, default: '' },
+    faviconUrl: { type: String, default: '' },
+    faviconS3Key: { type: String, default: '' },
   },
   { timestamps: true }
 );

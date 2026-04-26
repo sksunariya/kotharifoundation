@@ -17,6 +17,7 @@ export const configAPI = {
   getPublic: () => api.get('/config/public'),
   getAdmin: () => api.get('/admin/config'),
   update: (data) => api.put('/admin/config', data),
+  uploadBranding: (formData) => api.post('/admin/config/branding', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 
 // Categories

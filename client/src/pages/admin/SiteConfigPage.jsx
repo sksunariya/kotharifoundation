@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { configAPI } from '../../api/endpoints';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import toast from 'react-hot-toast';
@@ -9,9 +9,29 @@ const SiteConfigPage = () => {
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState('general');
 
+  // Branding state
+  const [logoMode, setLogoMode] = useState('url');
+  const [logoUrlInput, setLogoUrlInput] = useState('');
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState('');
+  const [faviconMode, setFaviconMode] = useState('url');
+  const [faviconUrlInput, setFaviconUrlInput] = useState('');
+  const [faviconFile, setFaviconFile] = useState(null);
+  const [faviconPreview, setFaviconPreview] = useState('');
+  const [brandingSaving, setBrandingSaving] = useState(false);
+  const logoInputRef = useRef(null);
+  const faviconInputRef = useRef(null);
+
   useEffect(() => {
     configAPI.getAdmin()
-      .then(res => setConfig(res.data.config))
+      .then(res => {
+        const c = res.data.config;
+        setConfig(c);
+        setLogoUrlInput(c.logoUrl || '');
+        setLogoPreview(c.logoUrl || '');
+        setFaviconUrlInput(c.faviconUrl || '');
+        setFaviconPreview(c.faviconUrl || '');
+      })
       .catch(() => toast.error('Failed to load config'))
       .finally(() => setLoading(false));
   }, []);
@@ -32,10 +52,43 @@ const SiteConfigPage = () => {
   const updateField = (key, value) => setConfig(prev => ({ ...prev, [key]: value }));
   const updateNested = (parent, key, value) => setConfig(prev => ({ ...prev, [parent]: { ...prev[parent], [key]: value } }));
 
+  const handleFileChange = (file, setFile, setPreview) => {
+    if (!file) return;
+    setFile(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
+  const handleBrandingSave = async (e) => {
+    e.preventDefault();
+    setBrandingSaving(true);
+    try {
+      const formData = new FormData();
+      if (logoMode === 'file' && logoFile) {
+        formData.append('logo', logoFile);
+      } else if (logoMode === 'url') {
+        formData.append('logoUrl', logoUrlInput);
+      }
+      if (faviconMode === 'file' && faviconFile) {
+        formData.append('favicon', faviconFile);
+      } else if (faviconMode === 'url') {
+        formData.append('faviconUrl', faviconUrlInput);
+      }
+      await configAPI.uploadBranding(formData);
+      toast.success('Branding saved!');
+      setLogoFile(null);
+      setFaviconFile(null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Save failed.');
+    } finally {
+      setBrandingSaving(false);
+    }
+  };
+
   if (loading) return <LoadingSpinner fullPage />;
 
   const tabs = [
     { id: 'general', label: 'General' },
+    { id: 'branding', label: 'Branding' },
     { id: 'payment', label: 'Payment' },
     { id: 'notifications', label: 'Notifications' },
     { id: 'reviews', label: 'Reviews' },
@@ -59,6 +112,92 @@ const SiteConfigPage = () => {
         ))}
       </div>
 
+      {tab === 'branding' && (
+        <form onSubmit={handleBrandingSave}>
+          <div className="card mb-6 grid grid-cols-1 gap-8">
+
+            {/* Logo */}
+            <div>
+              <h2 className="text-base font-semibold text-gray-700 mb-3">Logo</h2>
+              <p className="text-xs text-gray-400 mb-3">Displayed in the navbar before "Kothari Education". Recommended: PNG/SVG with transparent background, height ~40px.</p>
+              <div className="flex gap-2 mb-3">
+                <button type="button" onClick={() => setLogoMode('url')} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${logoMode === 'url' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-600 border-gray-300'}`}>Enter URL</button>
+                <button type="button" onClick={() => setLogoMode('file')} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${logoMode === 'file' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-600 border-gray-300'}`}>Upload File</button>
+              </div>
+              {logoMode === 'url' ? (
+                <input
+                  type="url"
+                  className="input"
+                  placeholder="https://example.com/logo.png"
+                  value={logoUrlInput}
+                  onChange={e => { setLogoUrlInput(e.target.value); setLogoPreview(e.target.value); }}
+                />
+              ) : (
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-primary-400 transition-colors"
+                  onClick={() => logoInputRef.current?.click()}
+                >
+                  <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleFileChange(e.target.files[0], setLogoFile, setLogoPreview)} />
+                  {logoFile ? (
+                    <p className="text-sm text-gray-600">{logoFile.name}</p>
+                  ) : (
+                    <p className="text-sm text-gray-400">Click to select an image (max 10 MB)</p>
+                  )}
+                </div>
+              )}
+              {logoPreview && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-xl inline-flex items-center gap-2">
+                  <img src={logoPreview} alt="Logo preview" className="h-10 w-auto object-contain" onError={() => setLogoPreview('')} />
+                  <span className="text-xs text-gray-400">Preview</span>
+                </div>
+              )}
+            </div>
+
+            {/* Favicon */}
+            <div className="border-t border-gray-100 pt-6">
+              <h2 className="text-base font-semibold text-gray-700 mb-3">Favicon</h2>
+              <p className="text-xs text-gray-400 mb-3">Shown in the browser tab. Recommended: ICO, PNG, or SVG at 32×32px.</p>
+              <div className="flex gap-2 mb-3">
+                <button type="button" onClick={() => setFaviconMode('url')} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${faviconMode === 'url' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-600 border-gray-300'}`}>Enter URL</button>
+                <button type="button" onClick={() => setFaviconMode('file')} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${faviconMode === 'file' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-600 border-gray-300'}`}>Upload File</button>
+              </div>
+              {faviconMode === 'url' ? (
+                <input
+                  type="url"
+                  className="input"
+                  placeholder="https://example.com/favicon.ico"
+                  value={faviconUrlInput}
+                  onChange={e => { setFaviconUrlInput(e.target.value); setFaviconPreview(e.target.value); }}
+                />
+              ) : (
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-primary-400 transition-colors"
+                  onClick={() => faviconInputRef.current?.click()}
+                >
+                  <input ref={faviconInputRef} type="file" accept="image/*,.ico" className="hidden" onChange={e => handleFileChange(e.target.files[0], setFaviconFile, setFaviconPreview)} />
+                  {faviconFile ? (
+                    <p className="text-sm text-gray-600">{faviconFile.name}</p>
+                  ) : (
+                    <p className="text-sm text-gray-400">Click to select an image/ICO (max 10 MB)</p>
+                  )}
+                </div>
+              )}
+              {faviconPreview && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-xl inline-flex items-center gap-2">
+                  <img src={faviconPreview} alt="Favicon preview" className="h-8 w-8 object-contain" onError={() => setFaviconPreview('')} />
+                  <span className="text-xs text-gray-400">Preview (browser tab will update on next page load)</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <button type="submit" disabled={brandingSaving} className="btn-primary px-8">
+            {brandingSaving ? 'Saving...' : 'Save Branding'}
+          </button>
+        </form>
+      )}
+
+      {tab !== 'branding' && (
       <form onSubmit={handleSave}>
         <div className="card mb-6">
           {tab === 'general' && (
@@ -223,6 +362,7 @@ const SiteConfigPage = () => {
           {saving ? 'Saving...' : 'Save Configuration'}
         </button>
       </form>
+      )}
     </div>
   );
 };

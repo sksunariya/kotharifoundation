@@ -3,7 +3,7 @@ const router = express.Router();
 const { protect } = require('../middleware/auth');
 const { authorize } = require('../middleware/role');
 const { getDashboard, getUsers, updateUser, deleteUser } = require('../controllers/adminController');
-const { getAdminConfig, updateConfig } = require('../controllers/configController');
+const { getAdminConfig, updateConfig, uploadBranding } = require('../controllers/configController');
 const { createCategory, updateCategory, deleteCategory } = require('../controllers/categoryController');
 const { createSlot, updateSlot, deleteSlot } = require('../controllers/slotController');
 const { getAllBookings, cancelBooking, updateMeetLink } = require('../controllers/bookingController');
@@ -23,6 +23,7 @@ router.get('/dashboard', getDashboard);
 // Config
 router.get('/config', getAdminConfig);
 router.put('/config', updateConfig);
+router.post('/config/branding', imageUpload.fields([{ name: 'logo', maxCount: 1 }, { name: 'favicon', maxCount: 1 }]), uploadBranding);
 
 // Categories
 router.post('/categories', createCategory);

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { SiteConfigProvider, useSiteConfig } from './context/SiteConfigContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -58,15 +59,13 @@ const PublicLayout = ({ children }) => {
 };
 
 const FooterWrapper = () => {
-  const [config, setConfig] = React.useState(null);
-  React.useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || '/api'}/config/public`).then(r => r.json()).then(d => setConfig(d.config)).catch(() => {});
-  }, []);
+  const config = useSiteConfig();
   return <Footer config={config} />;
 };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <BrowserRouter>
+    <SiteConfigProvider>
     <AuthProvider>
       <ScrollToTop />
       <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
@@ -112,5 +111,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           </Route>
         </Routes>
       </AuthProvider>
+    </SiteConfigProvider>
     </BrowserRouter>
 );
