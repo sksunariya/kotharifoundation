@@ -10,7 +10,7 @@ const { getAllBookings, cancelBooking, updateMeetLink } = require('../controller
 const { getAdminPayments, verifyPayment, rejectPayment } = require('../controllers/paymentController');
 const { getAdminInstructors, createInstructor, updateInstructor, deleteInstructor } = require('../controllers/instructorController');
 const { getAdminResources, createResource, uploadResource, updateResource, deleteResource } = require('../controllers/resourceController');
-const { getAdminReviews, approveReview, rejectReview, deleteReview } = require('../controllers/reviewController');
+const { getAdminReviews, createAdminReview, updateReview, approveReview, rejectReview, deleteReview } = require('../controllers/reviewController');
 const { getAdminQueries, updateQuery, deleteQuery } = require('../controllers/queryController');
 const { getAllSlides, createSlide, updateSlide, deleteSlide, reorderSlides } = require('../controllers/carouselController');
 const { imageUpload, mediaUpload } = require('../services/upload');
@@ -65,6 +65,8 @@ router.post('/resources/upload', mediaUpload.single('file'), uploadResource);
 
 // Reviews
 router.get('/reviews', getAdminReviews);
+router.post('/reviews', createAdminReview);
+router.put('/reviews/:id', updateReview);
 router.put('/reviews/:id/approve', approveReview);
 router.put('/reviews/:id/reject', rejectReview);
 router.delete('/reviews/:id', deleteReview);

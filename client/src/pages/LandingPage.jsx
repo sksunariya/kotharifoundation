@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { configAPI, categoryAPI, instructorAPI, carouselAPI } from '../api/endpoints';
+import { configAPI, categoryAPI, instructorAPI, carouselAPI, reviewAPI } from '../api/endpoints';
 import LoadingSpinner from '../components/LoadingSpinner';
 import HeroCarousel from '../components/HeroCarousel';
 import { useAuth } from '../context/AuthContext';
@@ -11,6 +11,7 @@ const LandingPage = () => {
   const [categories, setCategories] = useState([]);
   const [instructors, setInstructors] = useState([]);
   const [carouselSlides, setCarouselSlides] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,12 +20,14 @@ const LandingPage = () => {
       categoryAPI.getAll(),
       instructorAPI.getAll(),
       carouselAPI.getPublic(),
+      reviewAPI.getPublished(),
     ])
-      .then(([configRes, catRes, instrRes, carouselRes]) => {
+      .then(([configRes, catRes, instrRes, carouselRes, reviewRes]) => {
         setConfig(configRes.data.config);
         setCategories(catRes.data.categories);
         setInstructors(instrRes.data.instructors);
         setCarouselSlides(carouselRes.data.slides || []);
+        setReviews(reviewRes.data.reviews || []);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -248,27 +251,34 @@ const LandingPage = () => {
         </section>
       )}
 
-      {/* Testimonials */}
-      {config?.testimonials?.length > 0 && (
+      {/* Reviews */}
+      {reviews.length > 0 && (
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">What Students Say</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {config.testimonials.map((t, i) => (
-                <div key={i} className="card">
+              {reviews.slice(0, 6).map((r) => (
+                <div key={r._id} className="card">
                   <div className="flex gap-1 mb-3">
-                    {Array.from({ length: t.rating || 5 }).map((_, j) => (
+                    {Array.from({ length: r.rating }).map((_, j) => (
                       <span key={j} className="text-yellow-400">★</span>
                     ))}
+                    {Array.from({ length: 5 - r.rating }).map((_, j) => (
+                      <span key={j} className="text-gray-300">★</span>
+                    ))}
                   </div>
-                  <p className="text-gray-600 italic mb-4">"{t.content}"</p>
+                  <p className="text-gray-600 italic mb-4">"{r.content}"</p>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-bold">
-                      {t.name[0]}
+                      {(r.isAdminCreated ? r.reviewerName : r.studentId?.name)?.[0] || '?'}
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-800 text-sm">{t.name}</p>
-                      {t.role && <p className="text-gray-500 text-xs">{t.role}</p>}
+                      <p className="font-semibold text-gray-800 text-sm">
+                        {r.isAdminCreated ? r.reviewerName : (r.studentId?.name || 'Student')}
+                      </p>
+                      <p className="text-gray-500 text-xs">
+                        {r.isAdminCreated ? r.reviewerRole : r.slotId?.title}
+                      </p>
                     </div>
                   </div>
                 </div>
