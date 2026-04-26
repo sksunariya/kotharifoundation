@@ -1,7 +1,6 @@
-const { randomUUID } = require('crypto');
-const path = require('path');
 const CarouselSlide = require('../models/CarouselSlide');
-const { putObject, deleteS3Object, getImagePresignedUrl } = require('../services/s3');
+const { getImagePresignedUrl } = require('../services/s3');
+const { uploadToS3, deleteFromS3 } = require('../services/upload');
 const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
 
@@ -33,9 +32,7 @@ exports.createSlide = catchAsync(async (req, res) => {
   let finalImageUrl = imageUrl || '';
 
   if (req.file) {
-    const ext = path.extname(req.file.originalname) || '.jpg';
-    s3Key = `carousel-images/${randomUUID()}${ext}`;
-    await putObject(s3Key, req.file.buffer, req.file.mimetype);
+    s3Key = await uploadToS3(req.file, 'carousel-images');
     finalImageUrl = '';
   }
 
@@ -63,20 +60,12 @@ exports.updateSlide = catchAsync(async (req, res) => {
   const { title, link, order, isActive, imageUrl } = req.body;
 
   if (req.file) {
-    // Delete old S3 object if it exists
-    if (slide.s3Key) {
-      await deleteS3Object(slide.s3Key).catch(() => {});
-    }
-    const ext = path.extname(req.file.originalname) || '.jpg';
-    slide.s3Key = `carousel-images/${randomUUID()}${ext}`;
-    await putObject(slide.s3Key, req.file.buffer, req.file.mimetype);
+    await deleteFromS3(slide.s3Key);
+    slide.s3Key = await uploadToS3(req.file, 'carousel-images');
     slide.imageUrl = '';
   } else if (imageUrl !== undefined && imageUrl !== slide.imageUrl) {
-    // Switching to an external URL — remove old S3 object
-    if (slide.s3Key) {
-      await deleteS3Object(slide.s3Key).catch(() => {});
-      slide.s3Key = null;
-    }
+    await deleteFromS3(slide.s3Key);
+    slide.s3Key = null;
     slide.imageUrl = imageUrl;
   }
 
@@ -94,10 +83,7 @@ exports.deleteSlide = catchAsync(async (req, res) => {
   const slide = await CarouselSlide.findById(req.params.id);
   if (!slide) throw new ApiError(404, 'Slide not found');
 
-  if (slide.s3Key) {
-    await deleteS3Object(slide.s3Key).catch(() => {});
-  }
-
+  await deleteFromS3(slide.s3Key);
   await slide.deleteOne();
   res.json({ success: true, message: 'Slide deleted' });
 });

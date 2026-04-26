@@ -3,7 +3,8 @@ const Booking      = require('../models/Booking');
 const SessionSlot  = require('../models/SessionSlot');
 const ApiError     = require('../utils/ApiError');
 const catchAsync   = require('../utils/catchAsync');
-const { getPresignedUrl, putObject } = require('../services/s3');
+const { getPresignedUrl } = require('../services/s3');
+const { uploadToS3 } = require('../services/upload');
 
 // ── S3 key naming ─────────────────────────────────────────────────────────────
 // e.g. sessions/abc123/2025-04-05_14-30_dsa_crash_course_recording.mp4
@@ -101,7 +102,7 @@ const uploadResource = catchAsync(async (req, res) => {
   const s3Key = makeS3Key(slot, type, existingCount, req.file.mimetype);
 
   // Upload buffer → S3
-  await putObject(s3Key, req.file.buffer, req.file.mimetype);
+  await uploadToS3(req.file, null, s3Key);
 
   // Enforce single recording per slot
   const markAsRecording = isRecording === 'true' && type === 'video';

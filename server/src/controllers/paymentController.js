@@ -5,7 +5,8 @@ const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
 const { createMeetLink } = require('../services/google-meet');
 const { sendBookingConfirmation, sendPaymentRejection } = require('../services/email');
-const { putObject, getImagePresignedUrl } = require('../services/s3');
+const { getImagePresignedUrl } = require('../services/s3');
+const { uploadToS3 } = require('../services/upload');
 
 // Attach a presigned screenshotUrl to a plain payment object (if it has a screenshotKey)
 const withScreenshotUrl = async (paymentObj) => {
@@ -63,7 +64,7 @@ const submitPayment = catchAsync(async (req, res) => {
   if (req.file) {
     const ext = req.file.mimetype.split('/')[1] || 'jpg';
     const screenshotKey = `payments/${bookingId}/${Date.now()}_screenshot.${ext}`;
-    await putObject(screenshotKey, req.file.buffer, req.file.mimetype);
+    await uploadToS3(req.file, null, screenshotKey);
     payment.screenshotKey = screenshotKey;
     payment.screenshotUrl = undefined;
   }
@@ -113,7 +114,7 @@ const resubmitPayment = catchAsync(async (req, res) => {
   if (req.file) {
     const ext = req.file.mimetype.split('/')[1] || 'jpg';
     const screenshotKey = `payments/${payment.bookingId._id}/${Date.now()}_screenshot.${ext}`;
-    await putObject(screenshotKey, req.file.buffer, req.file.mimetype);
+    await uploadToS3(req.file, null, screenshotKey);
     payment.screenshotKey = screenshotKey;
     payment.screenshotUrl = undefined;
   }
