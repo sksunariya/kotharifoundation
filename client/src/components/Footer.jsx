@@ -40,8 +40,11 @@ const Footer = ({ config }) => {
             )}
           </div>
         </div>
-        <div className="border-t border-gray-800 pt-6 text-center text-sm text-gray-500">
-          {config?.footerText || '© 2024 Kothari Foundation. All rights reserved.'}
+        <div className="border-t border-gray-800 pt-6 text-center text-sm text-gray-500 space-y-2">
+          <div>{config?.footerText || '© 2024 Kothari Foundation. All rights reserved.'}</div>
+          <div>
+            <a href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a>
+          </div>
         </div>
       </div>
     </footer>

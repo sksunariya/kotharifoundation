@@ -46,6 +46,7 @@ import QueriesPage from './pages/admin/QueriesPage';
 import CarouselAdminPage from './pages/admin/CarouselAdminPage';
 import ResourceHubPage from './pages/ResourceHubPage';
 import ContactPage from './pages/ContactPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import ResubmitPaymentPage from './pages/ResubmitPaymentPage';
 
 const PublicLayout = ({ children }) => {
@@ -87,6 +88,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/instructors" element={<PublicLayout><InstructorsPage /></PublicLayout>} />
           <Route path="/instructors/:id" element={<PublicLayout><InstructorProfilePage /></PublicLayout>} />
           <Route path="/contact" element={<PublicLayout><ContactPage /></PublicLayout>} />
+          <Route path="/privacy-policy" element={<PublicLayout><PrivacyPolicyPage /></PublicLayout>} />
           <Route path="/resubmit-payment/:bookingId" element={<PublicLayout>
             <ProtectedRoute><ResubmitPaymentPage /></ProtectedRoute>
           </PublicLayout>} />

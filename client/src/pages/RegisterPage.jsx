@@ -17,6 +17,56 @@ const EyeIcon = ({ open }) =>
     </svg>
   );
 
+const PrivacyPolicyModal = ({ onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+    <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+    <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 className="text-lg font-bold text-gray-800">Privacy Policy</h2>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="Close"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div className="overflow-y-auto px-6 py-5 space-y-5 text-sm text-gray-600">
+        <p>We respect your privacy and are committed to protecting your personal information.</p>
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-1">Information We Collect</h3>
+          <p>We may collect your name, contact details, educational information, and basic technical data to provide and improve our services.</p>
+        </div>
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-1">Use of Information</h3>
+          <p>Your information is used to deliver educational services, process payments, communicate updates, and improve our platform.</p>
+        </div>
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-1">Sharing of Information</h3>
+          <p>We do not sell your data. Information may be shared only with trusted service providers (e.g., payment gateways) or when required by law.</p>
+        </div>
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-1">Data Security</h3>
+          <p>We take reasonable steps to protect your information from unauthorized access or misuse.</p>
+        </div>
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-1">Your Rights</h3>
+          <p>You can request to access, update, or delete your personal data by contacting us.</p>
+        </div>
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-1">Contact Us</h3>
+          <p>For any privacy-related questions, please reach out to us via the <a href="/contact" className="text-primary-600 hover:underline">Contact page</a>.</p>
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-gray-100">
+        <button onClick={onClose} className="btn-primary w-full py-2">Close</button>
+      </div>
+    </div>
+  </div>
+);
+
 const RegisterPage = () => {
   const [step, setStep] = useState('form'); // 'form' | 'otp'
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', institute: '' });
@@ -24,6 +74,8 @@ const RegisterPage = () => {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [showPolicy, setShowPolicy] = useState(false);
   const { isAuthenticated, setUser } = useAuth();
   const navigate = useNavigate();
 
@@ -33,6 +85,10 @@ const RegisterPage = () => {
     e.preventDefault();
     if (form.password.length < 6) {
       toast.error('Password must be at least 6 characters.');
+      return;
+    }
+    if (!agreed) {
+      toast.error('Please accept the terms and conditions to continue.');
       return;
     }
     setLoading(true);
@@ -83,6 +139,8 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
+      {showPolicy && <PrivacyPolicyModal onClose={() => setShowPolicy(false)} />}
+
       <div className="w-full max-w-md">
         <div className="card">
           <div className="text-center mb-8">
@@ -164,6 +222,28 @@ const RegisterPage = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Terms & Conditions */}
+              <div className="flex items-start gap-3 pt-1">
+                <input
+                  id="terms"
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 cursor-pointer flex-shrink-0"
+                />
+                <label htmlFor="terms" className="text-sm text-gray-600 leading-snug">
+                  I agree to the terms and conditions.{' '}
+                  <button
+                    type="button"
+                    onClick={() => setShowPolicy(true)}
+                    className="text-primary-600 hover:underline font-medium"
+                  >
+                    View
+                  </button>
+                </label>
+              </div>
+
               <button type="submit" className="btn-primary w-full py-2.5" disabled={loading}>
                 {loading ? 'Sending OTP...' : 'Continue'}
               </button>
