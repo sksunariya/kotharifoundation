@@ -28,11 +28,16 @@ const InstructorsAdminPage = () => {
 
   const instructors = data?.instructors || [];
 
+  const resetFileInput = () => {
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const openNew = () => {
     setForm(defaultForm);
     setEditId(null);
     setPhotoFile(null);
     setPhotoPreview(null);
+    resetFileInput();
     setShowForm(true);
   };
 
@@ -62,6 +67,7 @@ const InstructorsAdminPage = () => {
     });
     setEditId(ins._id);
     setPhotoFile(null);
+    resetFileInput();
     // Show existing photo as preview (either S3 presigned or external URL)
     setPhotoPreview(ins.photo || null);
     setShowForm(true);

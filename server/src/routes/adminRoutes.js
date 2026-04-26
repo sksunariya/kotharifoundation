@@ -26,8 +26,8 @@ router.put('/config', updateConfig);
 router.post('/config/branding', imageUpload.fields([{ name: 'logo', maxCount: 1 }, { name: 'favicon', maxCount: 1 }]), uploadBranding);
 
 // Categories
-router.post('/categories', createCategory);
-router.put('/categories/:id', updateCategory);
+router.post('/categories', imageUpload.single('icon'), createCategory);
+router.put('/categories/:id', imageUpload.single('icon'), updateCategory);
 router.delete('/categories/:id', deleteCategory);
 
 // Slots

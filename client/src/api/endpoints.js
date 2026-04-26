@@ -24,8 +24,8 @@ export const configAPI = {
 export const categoryAPI = {
   getAll: () => api.get('/categories'),
   getOne: (id) => api.get(`/categories/${id}`),
-  create: (data) => api.post('/admin/categories', data),
-  update: (id, data) => api.put(`/admin/categories/${id}`, data),
+  create: (formData) => api.post('/admin/categories', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  update: (id, formData) => api.put(`/admin/categories/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   delete: (id) => api.delete(`/admin/categories/${id}`),
 };
 
