@@ -34,6 +34,7 @@ const siteConfigSchema = new mongoose.Schema(
     adminNotificationEmail: { type: String, default: '' },
     allowReviews: { type: Boolean, default: true },
     requireReviewApproval: { type: Boolean, default: true },
+    carouselInterval: { type: Number, default: 4 }, // seconds
   },
   { timestamps: true }
 );

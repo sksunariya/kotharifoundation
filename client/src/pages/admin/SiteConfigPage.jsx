@@ -179,6 +179,25 @@ const SiteConfigPage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Hero Video URL</label>
                 <input type="url" className="input" value={config.heroVideoUrl || ''} onChange={e => updateField('heroVideoUrl', e.target.value)} placeholder="https://..." />
               </div>
+              <div className="pt-2 border-t border-gray-100">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Carousel Auto-play Speed
+                  <span className="ml-2 text-xs font-normal text-gray-400">(seconds between slides)</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    className="input w-32"
+                    min={1}
+                    max={30}
+                    step={1}
+                    value={config.carouselInterval ?? 4}
+                    onChange={e => updateField('carouselInterval', Math.max(1, Math.min(30, Number(e.target.value))))}
+                  />
+                  <span className="text-sm text-gray-500">seconds</span>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Min 1s · Max 30s · Default 4s. Manage carousel images in <a href="/admin/carousel" className="text-primary-500 underline">Carousel</a>.</p>
+              </div>
             </div>
           )}
 

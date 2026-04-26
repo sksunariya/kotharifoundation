@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { configAPI, categoryAPI, instructorAPI } from '../api/endpoints';
+import { configAPI, categoryAPI, instructorAPI, carouselAPI } from '../api/endpoints';
 import LoadingSpinner from '../components/LoadingSpinner';
+import HeroCarousel from '../components/HeroCarousel';
 import { useAuth } from '../context/AuthContext';
 
 const LandingPage = () => {
@@ -9,14 +10,21 @@ const LandingPage = () => {
   const [config, setConfig] = useState(null);
   const [categories, setCategories] = useState([]);
   const [instructors, setInstructors] = useState([]);
+  const [carouselSlides, setCarouselSlides] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([configAPI.getPublic(), categoryAPI.getAll(), instructorAPI.getAll()])
-      .then(([configRes, catRes, instrRes]) => {
+    Promise.all([
+      configAPI.getPublic(),
+      categoryAPI.getAll(),
+      instructorAPI.getAll(),
+      carouselAPI.getPublic(),
+    ])
+      .then(([configRes, catRes, instrRes, carouselRes]) => {
         setConfig(configRes.data.config);
         setCategories(catRes.data.categories);
         setInstructors(instrRes.data.instructors);
+        setCarouselSlides(carouselRes.data.slides || []);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -26,6 +34,15 @@ const LandingPage = () => {
 
   return (
     <div>
+      {/* Hero Carousel */}
+      {carouselSlides.length > 0 && (
+        <section className="bg-gray-100 py-4 sm:py-6 px-4">
+          <div className="max-w-7xl mx-auto">
+            <HeroCarousel slides={carouselSlides} interval={config?.carouselInterval || 4} />
+          </div>
+        </section>
+      )}
+
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary-900 via-primary-800 to-indigo-900 text-white py-16 sm:py-24 px-4">
         <div className="max-w-4xl mx-auto text-center">

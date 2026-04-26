@@ -12,7 +12,9 @@ const { getAdminInstructors, createInstructor, updateInstructor, deleteInstructo
 const { getAdminResources, createResource, uploadResource, updateResource, deleteResource } = require('../controllers/resourceController');
 const { getAdminReviews, approveReview, rejectReview, deleteReview } = require('../controllers/reviewController');
 const { getAdminQueries, updateQuery, deleteQuery } = require('../controllers/queryController');
+const { getAllSlides, createSlide, updateSlide, deleteSlide, reorderSlides } = require('../controllers/carouselController');
 const s3Upload = require('../config/s3Upload');
+const carouselUpload = require('../config/carouselUpload');
 
 router.use(protect, authorize('admin'));
 
@@ -71,5 +73,12 @@ router.delete('/reviews/:id', deleteReview);
 router.get('/queries', getAdminQueries);
 router.put('/queries/:id', updateQuery);
 router.delete('/queries/:id', deleteQuery);
+
+// Carousel
+router.get('/carousel', getAllSlides);
+router.post('/carousel', carouselUpload.single('image'), createSlide);
+router.put('/carousel/reorder', reorderSlides);
+router.put('/carousel/:id', carouselUpload.single('image'), updateSlide);
+router.delete('/carousel/:id', deleteSlide);
 
 module.exports = router;

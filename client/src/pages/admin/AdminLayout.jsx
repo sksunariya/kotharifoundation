@@ -12,6 +12,7 @@ const navItems = [
   { to: '/admin/instructors', label: 'Instructors', icon: '👨‍🏫' },
   { to: '/admin/resources', label: 'Resources', icon: '📦' },
   { to: '/admin/users', label: 'Users', icon: '👥' },
+  { to: '/admin/carousel', label: 'Carousel', icon: '🖼️' },
   { to: '/admin/reviews', label: 'Reviews', icon: '⭐' },
   { to: '/admin/queries', label: 'Queries', icon: '💬' },
   { to: '/admin/config', label: 'Site Config', icon: '⚙️' },

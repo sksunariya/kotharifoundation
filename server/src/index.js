@@ -20,6 +20,7 @@ const instructorRoutes = require('./routes/instructorRoutes');
 const resourceRoutes  = require('./routes/resourceRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const queryRoutes = require('./routes/queryRoutes');
+const carouselRoutes = require('./routes/carouselRoutes');
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use('/api/instructors', instructorRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/queries', queryRoutes);
+app.use('/api/carousel', carouselRoutes);
 
 // 404 handler
 app.use((req, res) => {

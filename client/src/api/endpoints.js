@@ -105,3 +105,13 @@ export const queryAPI = {
   update: (id, data) => api.put(`/admin/queries/${id}`, data),
   delete: (id) => api.delete(`/admin/queries/${id}`),
 };
+
+// Carousel
+export const carouselAPI = {
+  getPublic: () => api.get('/carousel'),
+  getAdmin: () => api.get('/admin/carousel'),
+  create: (formData) => api.post('/admin/carousel', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  update: (id, formData) => api.put(`/admin/carousel/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  delete: (id) => api.delete(`/admin/carousel/${id}`),
+  reorder: (slides) => api.put('/admin/carousel/reorder', { slides }),
+};

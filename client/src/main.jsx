@@ -42,6 +42,7 @@ import InstructorsAdminPage from './pages/admin/InstructorsAdminPage';
 import ResourcesAdminPage from './pages/admin/ResourcesAdminPage';
 import ReviewsPage from './pages/admin/ReviewsPage';
 import QueriesPage from './pages/admin/QueriesPage';
+import CarouselAdminPage from './pages/admin/CarouselAdminPage';
 import ResourceHubPage from './pages/ResourceHubPage';
 import ContactPage from './pages/ContactPage';
 import ResubmitPaymentPage from './pages/ResubmitPaymentPage';
@@ -105,6 +106,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="config" element={<SiteConfigPage />} />
             <Route path="instructors" element={<InstructorsAdminPage />} />
             <Route path="resources" element={<ResourcesAdminPage />} />
+            <Route path="carousel" element={<CarouselAdminPage />} />
             <Route path="reviews" element={<ReviewsPage />} />
             <Route path="queries" element={<QueriesPage />} />
           </Route>
