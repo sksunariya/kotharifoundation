@@ -19,7 +19,7 @@ const EyeIcon = ({ open }) =>
 
 const RegisterPage = () => {
   const [step, setStep] = useState('form'); // 'form' | 'otp'
-  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', institute: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -130,6 +130,16 @@ const RegisterPage = () => {
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Institute / School</label>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="e.g. IIT Bombay, Delhi Public School"
+                  value={form.institute}
+                  onChange={(e) => setForm({ ...form, institute: e.target.value })}
                 />
               </div>
               <div>

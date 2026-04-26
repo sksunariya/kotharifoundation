@@ -11,7 +11,7 @@ const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString()
 // POST /api/auth/register
 // Creates user (unverified), sends OTP. Does NOT log in yet.
 const register = catchAsync(async (req, res) => {
-  const { name, email, password, phone } = req.body;
+  const { name, email, password, phone, institute } = req.body;
 
   const existingUser = await User.findOne({ email: email.toLowerCase() });
   if (existingUser) {
@@ -21,6 +21,7 @@ const register = catchAsync(async (req, res) => {
     // Update user details in case they changed them and resend OTP
     existingUser.name = name;
     if (phone) existingUser.phone = phone;
+    if (institute) existingUser.institute = institute;
     existingUser.password = password; // triggers pre-save hash
     const otp = generateOtp();
     existingUser.emailVerificationOtp = otp;
@@ -36,6 +37,7 @@ const register = catchAsync(async (req, res) => {
     email,
     password,
     phone,
+    institute,
     isEmailVerified: false,
     emailVerificationOtp: otp,
     emailVerificationOtpExpires: new Date(Date.now() + 10 * 60 * 1000),

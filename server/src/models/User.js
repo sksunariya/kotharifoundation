@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 6, select: false },
     role: { type: String, enum: Object.values(ROLES), default: ROLES.STUDENT },
     phone: { type: String, trim: true },
+    institute: { type: String, trim: true },
     avatar: { type: String },
     isVerified: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },

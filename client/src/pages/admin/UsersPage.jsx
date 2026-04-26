@@ -32,6 +32,7 @@ const UsersPage = () => {
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Name</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Email</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Phone</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Institute</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Joined</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Status</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">Action</th>
@@ -39,12 +40,13 @@ const UsersPage = () => {
               </thead>
               <tbody>
                 {users.length === 0 ? (
-                  <tr><td colSpan={6} className="text-center py-10 text-gray-400">No users found.</td></tr>
+                  <tr><td colSpan={7} className="text-center py-10 text-gray-400">No users found.</td></tr>
                 ) : users.map((u) => (
                   <tr key={u._id} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="py-3 px-4 font-medium">{u.name}</td>
                     <td className="py-3 px-4 text-gray-500">{u.email}</td>
                     <td className="py-3 px-4 text-gray-500">{u.phone || '—'}</td>
+                    <td className="py-3 px-4 text-gray-500">{u.institute || '—'}</td>
                     <td className="py-3 px-4 text-gray-500">{formatDate(u.createdAt)}</td>
                     <td className="py-3 px-4">
                       <span className={`badge ${u.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -75,6 +77,7 @@ const UsersPage = () => {
                   <p className="font-medium text-sm">{u.name}</p>
                   <p className="text-xs text-gray-400 truncate">{u.email}</p>
                   {u.phone && <p className="text-xs text-gray-400">{u.phone}</p>}
+                  {u.institute && <p className="text-xs text-gray-400">{u.institute}</p>}
                   <p className="text-xs text-gray-400 mt-1">Joined {formatDate(u.createdAt)}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
