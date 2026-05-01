@@ -4,13 +4,25 @@ import { slotAPI, bookingAPI, paymentAPI } from '../api/endpoints';
 import { formatDateTime, formatINR } from '../utils/formatDate';
 import QRDisplay from '../components/QRDisplay';
 import LoadingSpinner from '../components/LoadingSpinner';
+import CategoryIcon from '../components/CategoryIcon';
 import toast from 'react-hot-toast';
+
+const SessionMeta = ({ icon, label, value, highlight }) => (
+  <div className="flex items-start gap-3">
+    <span className="text-xl mt-0.5">{icon}</span>
+    <div>
+      <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{label}</p>
+      <p className={`text-sm font-semibold mt-0.5 ${highlight ? 'text-primary-700 text-base' : 'text-gray-800'}`}>{value}</p>
+    </div>
+  </div>
+);
 
 const BookSessionPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const isResume = location.state?.resume === true;
+
   const [slot, setSlot] = useState(null);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState('confirm'); // confirm | payment | submitted
@@ -22,13 +34,12 @@ const BookSessionPage = () => {
   const [notes, setNotes] = useState('');
   const [isFree, setIsFree] = useState(false);
 
-  // Payment submission
   const [utrNumber, setUtrNumber] = useState('');
   const [screenshot, setScreenshot] = useState(null);
   const [screenshotError, setScreenshotError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -54,7 +65,6 @@ const BookSessionPage = () => {
       .getOne(id)
       .then(async (res) => {
         setSlot(res.data.slot);
-        // Auto-resume to payment step if coming from My Bookings
         if (isResume) {
           try {
             const bookingRes = await bookingAPI.create({ slotId: id });
@@ -128,57 +138,138 @@ const BookSessionPage = () => {
     }
   };
 
+  // Duration in minutes
+  const getDuration = (start, end) => {
+    if (!start || !end) return null;
+    const mins = Math.round((new Date(end) - new Date(start)) / 60000);
+    if (mins < 60) return `${mins} min`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m ? `${h}h ${m}m` : `${h}h`;
+  };
+
   if (loading) return <LoadingSpinner fullPage />;
   if (!slot) return <div className="text-center py-20 text-gray-400">Session not found.</div>;
 
+  const duration = getDuration(slot.startTime, slot.endTime);
+  const hasSyllabus = slot.syllabus && slot.syllabus.replace(/<[^>]*>/g, '').trim() !== '';
+
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 sm:py-10">
+    <div className="max-w-5xl mx-auto px-4 py-6 sm:py-10">
+
+      {/* ── Step: Confirm ─────────────────────────────────────────────── */}
       {step === 'confirm' && (
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">Book Session</h1>
-          <div className="card mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">{slot.categoryId?.icon}</span>
-              <span className="text-sm font-medium text-primary-600">{slot.categoryId?.name}</span>
-            </div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">{slot.title}</h2>
-            {slot.description && <p className="text-gray-500 text-sm mb-4">{slot.description}</p>}
-            <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="text-gray-500 mb-1">Date & Time</div>
-                <div className="font-semibold">{formatDateTime(slot.startTime)}</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="text-gray-500 mb-1">Price</div>
-                <div className="font-semibold text-primary-700 text-lg">{formatINR(slot.price)}</div>
-              </div>
-            </div>
+        <div className="lg:grid lg:grid-cols-3 lg:gap-8 space-y-6 lg:space-y-0">
+
+          {/* Left: Session details + syllabus */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Session header */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
-              <textarea
-                className="input resize-none"
-                rows={3}
-                placeholder="Any specific topics or questions you'd like to cover..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
+              <div className="flex items-center gap-2 mb-2">
+                <CategoryIcon icon={slot.categoryId?.icon} size="sm" />
+                <span className="text-sm font-semibold text-primary-600 bg-primary-50 px-2.5 py-0.5 rounded-full">
+                  {slot.categoryId?.name}
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-snug">{slot.title}</h1>
+              {slot.description && (
+                <p className="mt-2 text-gray-500 leading-relaxed">{slot.description}</p>
+              )}
             </div>
+
+            {/* Session meta grid */}
+            <div className="card grid grid-cols-2 sm:grid-cols-4 gap-5">
+              <SessionMeta icon="📅" label="Date & Time" value={formatDateTime(slot.startTime)} />
+              {duration && <SessionMeta icon="⏱️" label="Duration" value={duration} />}
+              <SessionMeta icon="🪑" label="Spots Left" value={`${slot.availableSpots ?? (slot.capacity - slot.bookedCount)} / ${slot.capacity}`} />
+              <SessionMeta icon="💰" label="Price" value={slot.price === 0 ? 'Free' : formatINR(slot.price)} highlight />
+            </div>
+
+            {/* Syllabus */}
+            {hasSyllabus && (
+              <div className="card">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-lg">📋</span>
+                  <h2 className="text-lg font-bold text-gray-800">Session Syllabus</h2>
+                </div>
+                <div
+                  className="prose-content"
+                  dangerouslySetInnerHTML={{ __html: slot.syllabus }}
+                />
+              </div>
+            )}
           </div>
-          <div className="flex gap-3">
-            <button onClick={() => navigate(-1)} className="btn-secondary flex-1">Cancel</button>
-            <button onClick={handleConfirmBooking} disabled={bookingLoading} className="btn-primary flex-1">
-              {bookingLoading ? 'Creating booking...' : slot.price === 0 ? 'Confirm Booking' : `Confirm & Pay ${formatINR(slot.price)}`}
-            </button>
+
+          {/* Right: Booking card */}
+          <div className="lg:col-span-1">
+            <div className="card sticky top-6 space-y-4">
+              <div className="text-center pb-3 border-b border-gray-100">
+                <div className="text-3xl font-bold text-primary-700">
+                  {slot.price === 0 ? 'Free' : formatINR(slot.price)}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">per session</div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <textarea
+                  className="input resize-none text-sm"
+                  rows={4}
+                  placeholder="Any specific topics or questions you'd like to cover..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+
+              <button
+                onClick={handleConfirmBooking}
+                disabled={bookingLoading}
+                className="btn-primary w-full py-3 text-base"
+              >
+                {bookingLoading
+                  ? 'Creating booking...'
+                  : slot.price === 0
+                  ? 'Confirm Booking'
+                  : `Confirm & Pay ${formatINR(slot.price)}`}
+              </button>
+
+              <button
+                onClick={() => navigate(-1)}
+                className="btn-secondary w-full text-sm"
+              >
+                Go Back
+              </button>
+
+              <p className="text-xs text-gray-400 text-center">
+                You won't be charged until payment is verified by our team.
+              </p>
+            </div>
           </div>
         </div>
       )}
 
+      {/* ── Step: Payment ─────────────────────────────────────────────── */}
       {step === 'payment' && booking && (
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Complete Payment</h1>
-          <p className="text-gray-500 mb-6">Booking ref: <span className="font-mono font-semibold">{booking.bookingRef}</span></p>
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Session summary pill */}
+          <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-sm">
+            <CategoryIcon icon={slot.categoryId?.icon} size="sm" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-800 truncate">{slot.title}</p>
+              <p className="text-xs text-gray-400">{formatDateTime(slot.startTime)}</p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="font-bold text-primary-700">{formatINR(slot.price)}</p>
+              <p className="text-xs text-gray-400 font-mono">{booking.bookingRef}</p>
+            </div>
+          </div>
 
-          <div className="mb-6">
+          {/* QR code */}
+          <div>
+            <h1 className="text-xl font-bold text-gray-800 mb-4">Complete Payment</h1>
             <QRDisplay
               qrCode={qrCode}
               upiId={upiId}
@@ -188,6 +279,7 @@ const BookSessionPage = () => {
             />
           </div>
 
+          {/* Payment proof form */}
           <div className="card">
             <h3 className="font-semibold text-gray-800 mb-4">Submit Payment Proof</h3>
             <form onSubmit={handleSubmitPayment} className="space-y-4">
@@ -234,17 +326,26 @@ const BookSessionPage = () => {
         </div>
       )}
 
+      {/* ── Step: Submitted ───────────────────────────────────────────── */}
       {step === 'submitted' && (
-        <div className="text-center py-10">
-          <div className="text-6xl mb-4">✅</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">{isFree ? 'Booking Confirmed!' : 'Payment Submitted!'}</h2>
-          <p className="text-gray-500 mb-2">Your booking reference: <span className="font-mono font-semibold">{booking?.bookingRef}</span></p>
-          <p className="text-gray-500 mb-8">
+        <div className="max-w-md mx-auto text-center py-12">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {isFree ? 'Booking Confirmed!' : 'Payment Submitted!'}
+          </h2>
+          <p className="text-gray-500 mb-1">
+            Booking reference: <span className="font-mono font-semibold text-gray-700">{booking?.bookingRef}</span>
+          </p>
+          <p className="text-gray-500 mb-8 text-sm leading-relaxed">
             {isFree
               ? 'Your session has been booked. You will receive the Google Meet link via email before the session.'
-              : 'Our team will verify your payment and send you the Google Meet link via email.'}
+              : 'Our team will verify your payment and send the Google Meet link to your email once confirmed.'}
           </p>
-          <div className="flex gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button onClick={() => navigate('/my-bookings')} className="btn-primary">View My Bookings</button>
             <button onClick={() => navigate('/booking-status')} className="btn-secondary">Check Status</button>
           </div>

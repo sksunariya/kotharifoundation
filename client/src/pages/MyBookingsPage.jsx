@@ -5,6 +5,7 @@ import { formatDateTime, formatINR, formatDate } from '../utils/formatDate';
 import BookingStatusBadge from '../components/BookingStatusBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ResourceModal from '../components/ResourceModal';
+import CategoryIcon from '../components/CategoryIcon';
 import useFetch from '../hooks/useFetch';
 import toast from 'react-hot-toast';
 
@@ -124,7 +125,7 @@ const MyBookingsPage = () => {
                   <div>
                     <span className="font-mono text-xs text-gray-400">{booking.bookingRef}</span>
                     <h3 className="font-semibold text-gray-800">{booking.slotId?.title}</h3>
-                    <span className="text-xs text-gray-500">{booking.slotId?.categoryId?.icon} {booking.slotId?.categoryId?.name}</span>
+                    <span className="text-xs text-gray-500 flex items-center gap-1"><CategoryIcon icon={booking.slotId?.categoryId?.icon} size="xs" />{booking.slotId?.categoryId?.name}</span>
                   </div>
                   <BookingStatusBadge status={booking.status} />
                 </div>

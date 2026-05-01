@@ -3,12 +3,15 @@ import { slotAPI, categoryAPI } from '../../api/endpoints';
 import { formatDateTime, formatINR } from '../../utils/formatDate';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import ResourceModal from '../../components/ResourceModal';
+import RichTextEditor from '../../components/RichTextEditor';
+import CategoryIcon from '../../components/CategoryIcon';
 import useFetch from '../../hooks/useFetch';
 import toast from 'react-hot-toast';
 
 const defaultForm = {
   categoryId: '', title: '', description: '', startTime: '', endTime: '',
   price: '', capacity: 1, isActive: true, autoSchedule: false, autoScheduleDays: 2,
+  syllabus: '',
 };
 
 // UTC stored in DB → IST string for datetime-local input ("YYYY-MM-DDThh:mm")
@@ -26,8 +29,8 @@ const fromISTInput = (s) => {
 
 // ── Slot Form Modal ────────────────────────────────────────────────────────────
 const SlotModal = ({ editId, form, setForm, categories, saving, onSave, onClose }) => (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl my-6">
+  <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl my-6">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <h3 className="font-bold text-lg text-gray-800">{editId ? 'Edit' : 'New'} Session Slot</h3>
         <button
@@ -40,69 +43,94 @@ const SlotModal = ({ editId, form, setForm, categories, saving, onSave, onClose 
         </button>
       </div>
 
-      <form onSubmit={onSave} className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-          <select className="input" value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} required>
-            <option value="">Select category</option>
-            {categories.map(c => <option key={c._id} value={c._id}>{c.icon} {c.name}</option>)}
-          </select>
+      <form onSubmit={onSave} className="p-6 space-y-5">
+        {/* Row 1: Category + Title */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <select className="input" value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} required>
+              <option value="">Select category</option>
+              {categories.map(c => {
+                const emojiIcon = c.icon && !c.icon.startsWith('http') ? `${c.icon} ` : '';
+                return <option key={c._id} value={c._id}>{emojiIcon}{c.name}</option>;
+              })}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <input className="input" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-          <input className="input" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
+        {/* Row 2: Times */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Start Time <span className="text-xs text-gray-400">(IST)</span></label>
+            <input
+              type="datetime-local"
+              className="input"
+              value={form.startTime}
+              onChange={e => setForm({ ...form, startTime: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">End Time <span className="text-xs text-gray-400">(IST)</span></label>
+            <input
+              type="datetime-local"
+              className="input"
+              value={form.endTime}
+              onChange={e => setForm({ ...form, endTime: e.target.value })}
+              required
+            />
+          </div>
         </div>
 
+        {/* Row 3: Price + Capacity */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
+            <input type="number" className="input" value={form.price} onChange={e => setForm({ ...form, price: parseFloat(e.target.value) })} required min={0} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+            <input type="number" className="input" value={form.capacity} onChange={e => setForm({ ...form, capacity: parseInt(e.target.value) })} required min={1} />
+          </div>
+        </div>
+
+        {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Start Time <span className="text-xs text-gray-400">(IST)</span></label>
-          <input
-            type="datetime-local"
-            className="input"
-            value={form.startTime}
-            onChange={e => setForm({ ...form, startTime: e.target.value })}
-            required
+          <label className="block text-sm font-medium text-gray-700 mb-1">Short Description</label>
+          <textarea className="input resize-none" rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Brief summary shown on the session card..." />
+        </div>
+
+        {/* Syllabus */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Syllabus
+            <span className="ml-2 text-xs font-normal text-gray-400">Detailed content outline shown to students before booking</span>
+          </label>
+          <RichTextEditor
+            value={form.syllabus}
+            onChange={(html) => setForm({ ...form, syllabus: html })}
+            placeholder="Add headings, topics, subtopics, and learning outcomes..."
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">End Time <span className="text-xs text-gray-400">(IST)</span></label>
-          <input
-            type="datetime-local"
-            className="input"
-            value={form.endTime}
-            onChange={e => setForm({ ...form, endTime: e.target.value })}
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
-          <input type="number" className="input" value={form.price} onChange={e => setForm({ ...form, price: parseFloat(e.target.value) })} required min={0} />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
-          <input type="number" className="input" value={form.capacity} onChange={e => setForm({ ...form, capacity: parseInt(e.target.value) })} required min={1} />
-        </div>
-
-        <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea className="input resize-none" rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <input type="checkbox" id="slotActive" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} />
-          <label htmlFor="slotActive" className="text-sm text-gray-700">Active</label>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <input type="checkbox" id="slotAutoSchedule" checked={form.autoSchedule} onChange={e => setForm({ ...form, autoSchedule: e.target.checked })} />
-          <label htmlFor="slotAutoSchedule" className="text-sm text-gray-700">Auto Schedule</label>
+        {/* Toggles */}
+        <div className="flex flex-wrap gap-6">
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="slotActive" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} />
+            <label htmlFor="slotActive" className="text-sm text-gray-700">Active</label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="slotAutoSchedule" checked={form.autoSchedule} onChange={e => setForm({ ...form, autoSchedule: e.target.checked })} />
+            <label htmlFor="slotAutoSchedule" className="text-sm text-gray-700">Auto Schedule</label>
+          </div>
         </div>
 
         {form.autoSchedule && (
-          <div className="sm:col-span-2">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Reschedule after (days)
               <span className="ml-1 text-xs text-gray-400">— if no bookings when session time passes</span>
@@ -118,7 +146,7 @@ const SlotModal = ({ editId, form, setForm, categories, saving, onSave, onClose 
           </div>
         )}
 
-        <div className="sm:col-span-2 flex gap-3 pt-2">
+        <div className="flex gap-3 pt-2">
           <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
           <button type="submit" disabled={saving} className="btn-primary flex-1">
             {saving ? 'Saving...' : editId ? 'Update Slot' : 'Create Slot'}
@@ -155,6 +183,7 @@ const SlotsPage = () => {
       isActive: slot.isActive,
       autoSchedule: slot.autoSchedule || false,
       autoScheduleDays: slot.autoScheduleDays ?? 2,
+      syllabus: slot.syllabus || '',
     });
     setEditId(slot._id);
     setShowModal(true);
@@ -248,7 +277,7 @@ const SlotsPage = () => {
                 ) : slots.map((slot) => (
                   <tr key={slot._id} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="py-3 px-4 font-medium">{slot.title}</td>
-                    <td className="py-3 px-4">{slot.categoryId?.icon} {slot.categoryId?.name}</td>
+                    <td className="py-3 px-4"><span className="flex items-center gap-1.5"><CategoryIcon icon={slot.categoryId?.icon} size="xs" />{slot.categoryId?.name}</span></td>
                     <td className="py-3 px-4 text-gray-500">{formatDateTime(slot.startTime)}</td>
                     <td className="py-3 px-4 font-semibold">{formatINR(slot.price)}</td>
                     <td className="py-3 px-4">{slot.bookedCount}/{slot.capacity}</td>
@@ -287,7 +316,7 @@ const SlotsPage = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="font-medium text-sm">{slot.title}</p>
-                    <p className="text-xs text-gray-400">{slot.categoryId?.icon} {slot.categoryId?.name}</p>
+                    <p className="text-xs text-gray-400 flex items-center gap-1"><CategoryIcon icon={slot.categoryId?.icon} size="xs" />{slot.categoryId?.name}</p>
                   </div>
                   <div className="flex flex-col gap-1 items-end">
                     <span className={`badge ${slot.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>

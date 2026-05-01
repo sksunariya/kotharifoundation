@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { configAPI, categoryAPI, instructorAPI, carouselAPI, reviewAPI } from '../api/endpoints';
 import LoadingSpinner from '../components/LoadingSpinner';
 import HeroCarousel from '../components/HeroCarousel';
+import CategoryIcon from '../components/CategoryIcon';
 import { useAuth } from '../context/AuthContext';
 
 const LandingPage = () => {
@@ -236,7 +237,7 @@ const LandingPage = () => {
                   to={`/sessions?category=${cat._id}`}
                   className="card hover:shadow-md hover:border-primary-200 transition-all group"
                 >
-                  <div className="text-4xl mb-3">{cat.icon}</div>
+                  <div className="mb-3"><CategoryIcon icon={cat.icon} size="lg" /></div>
                   <h3 className="font-bold text-gray-800 mb-1 group-hover:text-primary-600">{cat.name}</h3>
                   {cat.description && <p className="text-gray-500 text-sm">{cat.description}</p>}
                 </Link>

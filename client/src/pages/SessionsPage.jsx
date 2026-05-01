@@ -3,12 +3,13 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { slotAPI, categoryAPI } from '../api/endpoints';
 import { formatDateTime, formatINR } from '../utils/formatDate';
 import LoadingSpinner from '../components/LoadingSpinner';
+import CategoryIcon from '../components/CategoryIcon';
 
 const SessionCard = ({ slot }) => (
   <div className="card hover:shadow-md transition-shadow">
     <div className="flex justify-between items-start mb-3">
       <div>
-        <span className="text-lg mr-2">{slot.categoryId?.icon}</span>
+        <CategoryIcon icon={slot.categoryId?.icon} size="sm" className="mr-2" />
         <span className="text-xs font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">
           {slot.categoryId?.name}
         </span>
@@ -77,7 +78,7 @@ const SessionsPage = () => {
               onClick={() => setSearchParams({ category: cat._id })}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === cat._id ? 'bg-primary-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-primary-300'}`}
             >
-              {cat.icon} {cat.name}
+              <CategoryIcon icon={cat.icon} size="xs" className="mr-1" /> {cat.name}
             </button>
           ))}
         </div>

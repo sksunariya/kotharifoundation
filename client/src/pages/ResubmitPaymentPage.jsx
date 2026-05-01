@@ -4,6 +4,7 @@ import { bookingAPI, paymentAPI } from '../api/endpoints';
 import { formatDateTime, formatINR } from '../utils/formatDate';
 import QRDisplay from '../components/QRDisplay';
 import LoadingSpinner from '../components/LoadingSpinner';
+import CategoryIcon from '../components/CategoryIcon';
 import toast from 'react-hot-toast';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -117,7 +118,7 @@ const ResubmitPaymentPage = () => {
       {/* Session info */}
       <div className="card mb-6">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xl">{slot.categoryId?.icon}</span>
+          <CategoryIcon icon={slot.categoryId?.icon} size="sm" />
           <span className="text-sm font-medium text-primary-600">{slot.categoryId?.name}</span>
         </div>
         <h2 className="font-semibold text-gray-800 mb-1">{slot.title}</h2>

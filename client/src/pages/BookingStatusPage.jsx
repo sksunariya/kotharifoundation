@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { bookingAPI } from '../api/endpoints';
 import { formatDateTime, formatINR } from '../utils/formatDate';
 import BookingStatusBadge from '../components/BookingStatusBadge';
+import CategoryIcon from '../components/CategoryIcon';
 import { PAYMENT_STATUS_LABELS } from '../utils/statusHelpers';
 
 const BookingStatusPage = () => {
@@ -56,7 +57,7 @@ const BookingStatusPage = () => {
                 <p className="text-xs text-gray-400 font-mono">{result.booking.bookingRef}</p>
                 <h2 className="text-xl font-bold text-gray-800">{result.booking.slotId?.title}</h2>
                 <p className="text-sm text-gray-500">
-                  {result.booking.slotId?.categoryId?.icon} {result.booking.slotId?.categoryId?.name}
+                  <span className="flex items-center gap-1"><CategoryIcon icon={result.booking.slotId?.categoryId?.icon} size="xs" />{result.booking.slotId?.categoryId?.name}</span>
                 </p>
               </div>
               <BookingStatusBadge status={result.booking.status} />
